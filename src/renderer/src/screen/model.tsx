@@ -87,7 +87,7 @@ result
       const resultInJs = await result.toJs()
       setResult(resultInJs)
 
-      console.log(JSON.stringify(resultInJs))
+      // console.log(JSON.stringify(resultInJs))
 
       if (
         resultInJs.erro &&
