@@ -30,6 +30,12 @@ import {
 } from '@renderer/components/shadcn/dialog'
 import { ScrollArea } from '@renderer/components/shadcn/scroll-area'
 import { ArrowLeft, Info } from 'lucide-react'
+import { ResultViewMM1N } from '@renderer/components/results/result-view-mm1n'
+import { ResultViewMM1 } from '@renderer/components/results/result-view-mm1'
+import { ResultViewMMS } from '@renderer/components/results/result-view-mms'
+import { toast } from 'sonner'
+import { ResultViewMMSK } from '@renderer/components/results/result-view-mmsk'
+import { ResultViewMM1K } from '@renderer/components/results/result-view-mm1k'
 // import { loadPyodide } from 'pyodide'
 // import { ipcRenderer } from 'electron'
 
@@ -59,8 +65,6 @@ export function ModelScreen() {
       return
     }
 
-    console.log(data)
-
     const params = model.fields.reduce((params, field) => {
       return [...params, `${field.name}=${data[field.name]}`]
     }, [] as string[])
@@ -69,13 +73,30 @@ export function ModelScreen() {
       const result = await pyodide.current.runPython(
         `
 ${model.function}
-result = func(${params.join(', ')})
+result = None
+try:
+  result = func(${params.join(', ')})
+except Exception as e:
+  result = {
+    'erro': str(e)
+  }
 result
       `.trim(),
       )
 
       const resultInJs = await result.toJs()
       setResult(resultInJs)
+
+      console.log(JSON.stringify(resultInJs))
+
+      if (
+        resultInJs.erro &&
+        !(resultInJs.erro === "name 'undefined' is not defined")
+      ) {
+        toast.error('Ocorreu um erro ao calcular o resultado', {
+          description: resultInJs.erro,
+        })
+      }
     })
   }
 
@@ -186,7 +207,21 @@ result
         </Button>
       </Form>
 
-      <pre>{result}</pre>
+      {result && model?.slug === 'mm1' && !result.erro && (
+        <ResultViewMM1 data={result} />
+      )}
+      {result && model?.slug === 'mm1n' && !result.erro && (
+        <ResultViewMM1N data={result} />
+      )}
+      {result && model?.slug === 'mms>1' && !result.erro && (
+        <ResultViewMMS data={result} />
+      )}
+      {result && model?.slug === 'mms>1k' && !result.erro && (
+        <ResultViewMMSK data={result} K={form.getValues().K || 0} />
+      )}
+      {result && model?.slug === 'mm1k' && !result.erro && (
+        <ResultViewMM1K data={result} K={form.getValues().K || 0} />
+      )}
 
       <Copyright />
     </Container>
