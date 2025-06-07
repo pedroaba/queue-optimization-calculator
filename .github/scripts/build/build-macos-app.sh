@@ -29,11 +29,11 @@ gh release create "$TAG_NAME" \
 # 3. Upload dos arquivos de build para a release
 echo "📤 Uploading build files to release..."
 for file in "$ASSET_DIR"/*; do
-  if [ -f "$file" ]; then
+  if [ -f "$file" ] && ([[ "$file" == *.dmg ]] || [[ "$file" == *.zip ]]); then
     echo "Uploading $file..."
     gh release upload "$TAG_NAME" "$file" --repo "$REPO" --clobber
   else
-    echo "skipping dir $file"
+    echo "Skipping $file"
   fi
 done
 

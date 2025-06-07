@@ -36,9 +36,13 @@ Write-Host "📤 Uploading build files to release..."
 Get-ChildItem -Path $ASSET_DIR | ForEach-Object {
     if ($_.PSIsContainer) {
         Write-Host "skipping dir $($_.FullName)"
-    } else {
+    }
+    elseif ($_.FullName -match '\.(exe|msi|zip|nupkg)$') {
         Write-Host "Uploading $($_.FullName)..."
         gh release upload "$TAG_NAME" "$($_.FullName)" --repo "$REPO" --clobber
+    }
+    else {
+        Write-Host "Skipping $($_.FullName)"
     }
 }
 
