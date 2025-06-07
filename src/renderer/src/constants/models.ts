@@ -1,9 +1,15 @@
 export type Model = {
   id: number
+  slug: string
   name: string
   preview: string
   description: string
   tags?: string[]
+  fields: Array<{
+    name: string
+    type: string
+    description: string
+  }>
 }
 
 export const models = [
@@ -925,6 +931,95 @@ O modelo M/M/s/K é utilizado quando há limitação de capacidade física ou op
 * O modelo M/M/s/K representa de forma mais realista sistemas sujeitos a limitações físicas ou operacionais
 
 > O modelo M/M/s/K é essencial para projetar sistemas de atendimento com restrição de capacidade, garantindo o uso eficiente dos recursos e o controle da rejeição de clientes.
+    `,
+    tags: ['new'],
+  },
+  {
+    id: 6,
+    slug: 'mg1',
+    name: 'M/G/1',
+    fields: [
+      {
+        name: 'lambd',
+        type: 'number',
+        description: 'Taxa de chegada (λ)',
+      },
+      {
+        name: 'mu',
+        type: 'number',
+        description: 'Taxa média de atendimento (μ)',
+      },
+      {
+        name: 'sigma',
+        type: 'number',
+        description: 'Desvio padrão do tempo de serviço (σ)',
+      },
+    ],
+    preview:
+      'Sistema de filas com chegada de clientes segundo processo de Poisson (tempos entre chegadas exponenciais), tempo de atendimento com média e desvio padrão genéricos (não necessariamente exponencial), e apenas um servidor (single server). Usado para modelar sistemas em que a variabilidade do tempo de serviço é relevante.',
+    function: `
+  def func(lambd: float, mu: float, sigma: float) -> dict[str, float]:
+      ro = lambd / mu
+  
+      if ro >= 1:
+          return {
+              "rho": ro,
+              "error": "O sistema é instável (λ ≥ μ). Os cálculos podem não ser válidos."
+          }
+  
+      sigma2 = sigma ** 2
+  
+      Lq = (lambd**2 * sigma2 + ro**2) / (2 * (1 - ro))
+      L = Lq + ro
+      Wq = Lq / lambd
+      W = Wq + 1 / mu
+  
+      return {
+          "rho": ro,
+          "Lq": Lq,
+          "L": L,
+          "Wq": Wq,
+          "W": W
+      }
+    `.trim(),
+    description: `
+  ### Modelo M/G/1
+  
+  O modelo **M/G/1** representa um sistema de filas com:
+  
+  - **M**: Chegadas segundo um processo de Poisson (intervalos exponenciais)
+  - **G**: Tempo de serviço com distribuição **Genérica** (média e desvio padrão conhecidos, mas não necessariamente exponencial)
+  - **1**: Apenas um servidor
+  
+  #### Características principais
+  
+  - Chegadas aleatórias (processo de Poisson)
+  - Tempo de serviço com qualquer distribuição (basta conhecer a média e o desvio padrão)
+  - Apenas um canal/servidor de atendimento
+  - Fila única, sem limitação de capacidade
+  
+  #### Fórmulas importantes
+  
+  - **Intensidade de tráfego:** ρ = λ / μ
+  - **Número médio na fila:** Lq = (λ² * σ² + ρ²) / [2 * (1 - ρ)]
+  - **Número médio no sistema:** L = Lq + ρ
+  - **Tempo médio na fila:** Wq = Lq / λ
+  - **Tempo médio no sistema:** W = Wq + 1/μ
+  
+  #### Aplicações
+  
+  O modelo M/G/1 é utilizado em sistemas onde o tempo de atendimento é **variável**, por exemplo:
+  
+  - Suporte técnico com diferentes complexidades de atendimento
+  - Serviços em que cada cliente demanda tempo diferente
+  - Produção industrial com variação no tempo de processamento
+  
+  #### Considerações
+  
+  - O sistema é **estável** somente se ρ < 1 (λ < μ).
+  - Permite análise da variabilidade do serviço (através do desvio padrão σ).
+  
+  > O modelo M/G/1 é indicado quando o tempo de serviço não é sempre igual ou exponencial, trazendo flexibilidade para modelagem de situações reais.
     `,
     tags: ['new'],
   },
