@@ -29,8 +29,12 @@ gh release create "$TAG_NAME" \
 # 3. Upload dos arquivos de build para a release
 echo "📤 Anexando arquivos de build à release..."
 for file in "$ASSET_DIR"/*; do
-  echo "Anexando $file..."
-  gh release upload "$TAG_NAME" "$file" --repo "$REPO" --clobber
+  if [ -f "$file" ]; then
+    echo "Anexando $file..."
+    gh release upload "$TAG_NAME" "$file" --repo "$REPO" --clobber
+  else
+    echo "Pulando diretório $file"
+  fi
 done
 
 echo "✅ Processo de build e release concluído com sucesso!"
