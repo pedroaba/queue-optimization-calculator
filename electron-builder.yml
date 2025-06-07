@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: queue-optimization-calculator
+appId: com.pedroaba.queue-models-calculator
+productName: Queue Models Calculator
 directories:
   buildResources: build
 files:
@@ -31,10 +31,13 @@ dmg:
 linux:
   target:
     - AppImage
-    - snap
     - deb
-  maintainer: electronjs.org
-  category: Utility
+    - rpm
+    - pacman
+    - freebsd
+  maintainer: pedr.augustobarbosa.aparecido@gmail.com
+  category: Utility,Education
+  synopsis: Calculates the optimal queue models for a given set of parameters.
 appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false

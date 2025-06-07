@@ -19,5 +19,6 @@ export default defineConfig({
       },
     },
     plugins: [react(), tailwindcss()],
+    publicDir: resolve('src/renderer/public'),
   },
 })
