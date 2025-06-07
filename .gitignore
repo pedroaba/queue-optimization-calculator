@@ -7,3 +7,4 @@ out
 .vscode
 .cursor
 src/renderer/public/*
+.env*
