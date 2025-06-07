@@ -39,7 +39,7 @@ jobs:
 
       - name: Baixar e extrair Pyodide (Windows)
         if: matrix.os == 'windows-latest'
-        run: pwsh .github/scripts/download-pyodide-win.sh
+        run: pwsh .github/scripts/download-pyodide-win.ps1
       # ------------------------------------
 
       - name: Release Electron app
