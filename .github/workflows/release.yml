@@ -35,11 +35,11 @@ jobs:
       # ----- Baixar e extrair Pyodide -----
       - name: Baixar e extrair Pyodide (Linux/macOS)
         if: matrix.os != 'windows-latest'
-        run: bash scripts/download-pyodide.sh
+        run: bash .github/scripts/download-pyodide.sh
 
       - name: Baixar e extrair Pyodide (Windows)
         if: matrix.os == 'windows-latest'
-        run: pwsh scripts/download-pyodide-win.sh
+        run: pwsh .github/scripts/download-pyodide-win.sh
       # ------------------------------------
 
       - name: Release Electron app
