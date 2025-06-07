@@ -15,7 +15,7 @@ fi
 
 # 1. Build do projeto
 echo "🔧 Iniciando o build com pnpm..."
-pnpm build
+pnpm build:mac
 
 # 2. Criação da release no GitHub (usa a tag já existente)
 echo "🚀 Criando a release no GitHub (se não existir)..."
