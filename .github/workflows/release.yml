@@ -64,7 +64,7 @@ jobs:
 
       - name: Release Electron app
         if: matrix.os == 'ubuntu-latest'
-        run: bash .github/scripts/build/build-macos-app.sh
+        run: bash .github/scripts/build/build-linux-app.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
