@@ -1,6 +1,6 @@
 {
   "name": "queue-optimization-calculator",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "A desktop application for queue optimization calculations and simulations using Electron, React and TypeScript",
   "main": "./out/main/index.js",
   "author": "pedr.augustobarbosa.aparecido@gmail.com",
