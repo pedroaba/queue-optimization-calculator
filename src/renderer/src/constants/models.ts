@@ -228,185 +228,182 @@ Este modelo é utilizado para representar sistemas onde não há limitação fí
     name: 'Modelo M/M/s>1',
     fields: [
       {
-        name: 'l',
+        name: 'lambda_val',
         type: 'number',
         description: 'Taxa de chegada (λ)',
       },
       {
-        name: 'm',
+        name: 'mu_val',
         type: 'number',
         description: 'Taxa de serviço (μ)',
       },
       {
-        name: 's',
+        name: 's_val',
         type: 'number',
         description: 'Número de servidores (s)',
+      },
+      {
+        name: 'n',
+        type: 'number',
+        description: 'Número de clientes (n)',
       },
     ],
     function: `
 import math
+ 
+def func(lambda_val, mu_val, s_val, n):
+    def calculate_rho(lambda_val, mu_val, s_val):
+        """
+        Calcula o fator de utilização (rho).
+        rho = lambda / (s * mu)
+        """
+        if s_val * mu_val == 0:
+            raise ValueError("s * mu não pode ser zero. Erro de divisão por zero.")
+        return lambda_val / (s_val * mu_val)
+ 
+    def p_0(lambda_val, mu_val, s_val):
+        """
+        Calcula a probabilidade de ter 0 clientes no sistema (P_0) para um sistema M/M/s (capacidade infinita).
+        P_0 = 1 / [ sum_{n=0}^{s-1} (lambda/mu)^n / n! + (lambda/mu)^s / s! * 1 / (1 - lambda/(s*mu)) ]
+        """
+        if lambda_val >= s_val * mu_val:
+            raise ValueError("Sistema instável: lambda deve ser menor que s * mu para P_0 em regime estacionário.")
+ 
+        sum_term = 0
+        for n in range(s_val):  # Soma de n=0 a s-1
+            sum_term += (lambda_val / mu_val)**n / math.factorial(n)
+ 
+        rho = calculate_rho(lambda_val, mu_val, s_val)
+ 
+        denominator_term_2_part_1 = (lambda_val / mu_val)**s_val / math.factorial(s_val)
+        denominator_term_2_part_2 = 1 / (1 - rho)
+        denominator = sum_term + (denominator_term_2_part_1 * denominator_term_2_part_2)
+ 
+        if denominator == 0:
+            raise ValueError("Denominador para P_0 é zero, não é possível calcular P_0.")
+ 
+        return 1 / denominator
+ 
+    def p_n(lambda_val, mu_val, s_val, n_val, p0_val):
+        """
+        Calcula a probabilidade de ter n clientes no sistema (P_n) para um sistema M/M/s (capacidade infinita).
+        P_n = (lambda/mu)^n / n! * P_0  para n <= S
+        P_n = (lambda/mu)^n / (s! * s^(n-s)) * P_0 para n > S
+        """
+        if n_val < 0:
+            return 0
+        elif n_val <= s_val:
+            return ((lambda_val / mu_val)**n_val / math.factorial(n_val)) * p0_val
+        else: # n_val > s_val
+            return ((lambda_val / mu_val)**n_val / (math.factorial(s_val) * (s_val**(n_val - s_val)))) * p0_val
+ 
+    def p_wq_equals_0(lambda_val, mu_val, s_val, p0_val):
+        """
+        Calcula a probabilidade do tempo de espera na fila ser 0 (P(Wq = 0)).
+        P(Wq = 0) = sum_{n=0}^{s-1} P_n
+        """
+        sum_pn = 0
+        for n in range(s_val): # Soma de n=0 a s-1
+            sum_pn += p_n(lambda_val, mu_val, s_val, n, p0_val)
+        return sum_pn
+ 
+    def p_w_greater_than_t(lambda_val, mu_val, s_val, t_val, p0_val):
+        """
+        Calcula a probabilidade do tempo de espera no sistema (W) ser maior que t.
+        P(W > t) = e^(-mu*t) * [1 + P_0*(lambda/mu)^s / (s!*(1-rho)) * (1 - e^(-mu*(s-1-lambda/mu)*t)) / (s-1-lambda/mu) ]
+        """
+        rho = calculate_rho(lambda_val, mu_val, s_val)
+ 
+        term1 = math.exp(-mu_val * t_val)
+        numerator_inner_bracket = p0_val * (lambda_val / mu_val)**s_val
+        denominator_inner_bracket = math.factorial(s_val) * (1 - rho)
+        if denominator_inner_bracket == 0:
+            raise ValueError("Denominador no parênteses interno de P(W > t) é zero, sistema instável (rho=1).")
+ 
+        middle_term_fraction = numerator_inner_bracket / denominator_inner_bracket
+        s_minus_1_minus_lambda_over_mu = s_val - 1 - (lambda_val / mu_val)
+        if abs(s_minus_1_minus_lambda_over_mu) < 1e-9: # Usar uma pequena tolerância para zero
+            last_term_fraction = mu_val * t_val
+        else:
+            last_term_fraction = (1 - math.exp(-mu_val * s_minus_1_minus_lambda_over_mu * t_val)) / s_minus_1_minus_lambda_over_mu
+ 
+        return term1 * (1 + middle_term_fraction * last_term_fraction)
+ 
+    def p_wq_greater_than_t(lambda_val, mu_val, s_val, t_val, pwq0_val):
+        """
+        Calcula a probabilidade do tempo de espera na fila (W_q) ser maior que t.
+        P(W_q > t) = [1 - P(W_q = 0)] * e^(-s*mu*(1-rho)*t)
+        """
+        rho = calculate_rho(lambda_val, mu_val, s_val)
+        return (1 - pwq0_val) * math.exp(-s_val * mu_val * (1 - rho) * t_val)
+ 
+    def l_q(lambda_val, mu_val, s_val, p0_val):
+        """
+        Calcula o número médio de clientes na fila (L_q).
+        L_q = P_0 * (lambda/mu)^s * rho / (s! * (1-rho)^2)
+        """
+        rho = calculate_rho(lambda_val, mu_val, s_val)
+ 
+        numerator = p0_val * (lambda_val / mu_val)**s_val * rho
+        denominator = math.factorial(s_val) * (1 - rho)**2
+ 
+        if denominator == 0:
+            raise ValueError("Denominador para L_q é zero, não é possível calcular L_q (rho=1).")
+ 
+        return numerator / denominator
+ 
+    def w_q(lambda_val, lq_val):
+        """
+        Calcula o tempo médio de espera na fila (W_q).
+        W_q = L_q / lambda
+        """
+        if lambda_val == 0:
+            return 0.0 # Se não há chegadas, não há tempo de espera na fila
+        return lq_val / lambda_val
+ 
+    def l_system(lambda_val, mu_val, lq_val):
+        """
+        Calcula o número médio de clientes no sistema (L).
+        L = L_q + lambda / mu
+        """
+        if mu_val == 0:
+            raise ValueError("Taxa de serviço mu não pode ser zero para o cálculo de L.")
+        return lq_val + (lambda_val / mu_val)
+ 
+    def w_system(lambda_val, mu_val, l_val):
+        """
+        Calcula o tempo médio gasto no sistema (W).
+        W = L / lambda
+        """
+        if lambda_val == 0:
+            return 0.0 # Se não há chegadas, não há tempo gasto no sistema
+        return l_val / lambda_val
 
-# --- Funções auxiliares e de cálculo do modelo ---
-
-def calculate_rho(lambda_val, mu_val, s_val):
-    """
-    Calcula o fator de utilização (rho).
-    rho = lambda / (s * mu)
-    """
-    if s_val * mu_val == 0:
-        raise ValueError("s * mu não pode ser zero. Erro de divisão por zero.")
-    return lambda_val / (s_val * mu_val)
-
-def p_0(lambda_val, mu_val, s_val):
-    """
-    Calcula a probabilidade de ter 0 clientes no sistema (P_0) para um sistema M/M/s (capacidade infinita).
-    P_0 = 1 / [ sum_{n=0}^{s-1} (lambda/mu)^n / n! + (lambda/mu)^s / s! * 1 / (1 - lambda/(s*mu)) ]
-    """
-    if lambda_val >= s_val * mu_val:
-        raise ValueError("Sistema instável: lambda deve ser menor que s * mu para P_0 em regime estacionário.")
-
-    sum_term = 0
-    for n in range(s_val):  # Soma de n=0 a s-1
-        sum_term += (lambda_val / mu_val)**n / math.factorial(n)
-
-    rho = calculate_rho(lambda_val, mu_val, s_val)
-
-    denominator_term_2_part_1 = (lambda_val / mu_val)**s_val / math.factorial(s_val)
-    denominator_term_2_part_2 = 1 / (1 - rho)
-    
-    denominator = sum_term + (denominator_term_2_part_1 * denominator_term_2_part_2)
-
-    if denominator == 0:
-        raise ValueError("Denominador para P_0 é zero, não é possível calcular P_0.")
-
-    return 1 / denominator
-
-def p_n(lambda_val, mu_val, s_val, n_val, p0_val):
-    """
-    Calcula a probabilidade de ter n clientes no sistema (P_n) para um sistema M/M/s (capacidade infinita).
-    P_n = (lambda/mu)^n / n! * P_0  para n <= S
-    P_n = (lambda/mu)^n / (s! * s^(n-s)) * P_0 para n > S
-    """
-    if n_val < 0:
-        return 0
-    elif n_val <= s_val:
-        return ((lambda_val / mu_val)**n_val / math.factorial(n_val)) * p0_val
-    else: # n_val > s_val
-        return ((lambda_val / mu_val)**n_val / (math.factorial(s_val) * (s_val**(n_val - s_val)))) * p0_val
-
-def p_wq_equals_0(lambda_val, mu_val, s_val, p0_val):
-    """
-    Calcula a probabilidade do tempo de espera na fila ser 0 (P(Wq = 0)).
-    P(Wq = 0) = sum_{n=0}^{s-1} P_n
-    """
-    sum_pn = 0
-    for n in range(s_val): # Soma de n=0 a s-1
-        sum_pn += p_n(lambda_val, mu_val, s_val, n, p0_val)
-    return sum_pn
-
-def p_w_greater_than_t(lambda_val, mu_val, s_val, t_val, p0_val):
-    """
-    Calcula a probabilidade do tempo de espera no sistema (W) ser maior que t.
-    P(W > t) = e^(-mu*t) * [1 + P_0*(lambda/mu)^s / (s!*(1-rho)) * (1 - e^(-mu*(s-1-lambda/mu)*t)) / (s-1-lambda/mu) ]
-    """
-    rho = calculate_rho(lambda_val, mu_val, s_val)
-
-    term1 = math.exp(-mu_val * t_val)
-    
-    numerator_inner_bracket = p0_val * (lambda_val / mu_val)**s_val
-    denominator_inner_bracket = math.factorial(s_val) * (1 - rho)
-    
-    if denominator_inner_bracket == 0:
-        raise ValueError("Denominador no parênteses interno de P(W > t) é zero, sistema instável (rho=1).")
-
-    middle_term_fraction = numerator_inner_bracket / denominator_inner_bracket
-    
-    s_minus_1_minus_lambda_over_mu = s_val - 1 - (lambda_val / mu_val)
-    
-    if abs(s_minus_1_minus_lambda_over_mu) < 1e-9: # Usar uma pequena tolerância para zero
-        last_term_fraction = mu_val * t_val
-    else:
-        last_term_fraction = (1 - math.exp(-mu_val * s_minus_1_minus_lambda_over_mu * t_val)) / s_minus_1_minus_lambda_over_mu
-
-    return term1 * (1 + middle_term_fraction * last_term_fraction)
-
-def p_wq_greater_than_t(lambda_val, mu_val, s_val, t_val, pwq0_val):
-    """
-    Calcula a probabilidade do tempo de espera na fila (W_q) ser maior que t.
-    P(W_q > t) = [1 - P(W_q = 0)] * e^(-s*mu*(1-rho)*t)
-    """
-    rho = calculate_rho(lambda_val, mu_val, s_val)
-    
-    return (1 - pwq0_val) * math.exp(-s_val * mu_val * (1 - rho) * t_val)
-
-def l_q(lambda_val, mu_val, s_val, p0_val):
-    """
-    Calcula o número médio de clientes na fila (L_q).
-    L_q = P_0 * (lambda/mu)^s * rho / (s! * (1-rho)^2)
-    """
-    rho = calculate_rho(lambda_val, mu_val, s_val)
-
-    numerator = p0_val * (lambda_val / mu_val)**s_val * rho
-    denominator = math.factorial(s_val) * (1 - rho)**2
-
-    if denominator == 0:
-        raise ValueError("Denominador para L_q é zero, não é possível calcular L_q (rho=1).")
-
-    return numerator / denominator
-
-def w_q(lambda_val, lq_val):
-    """
-    Calcula o tempo médio de espera na fila (W_q).
-    W_q = L_q / lambda
-    """
-    if lambda_val == 0:
-        return 0.0 # Se não há chegadas, não há tempo de espera na fila
-    return lq_val / lambda_val
-
-def l_system(lambda_val, mu_val, lq_val):
-    """
-    Calcula o número médio de clientes no sistema (L).
-    L = L_q + lambda / mu
-    """
-    if mu_val == 0:
-        raise ValueError("Taxa de serviço mu não pode ser zero para o cálculo de L.")
-    
-    return lq_val + (lambda_val / mu_val)
-
-def w_system(lambda_val, mu_val, l_val):
-    """
-    Calcula o tempo médio gasto no sistema (W).
-    W = L / lambda
-    """
-    if lambda_val == 0:
-        return 0.0 # Se não há chegadas, não há tempo gasto no sistema
-    return l_val / lambda_val
-def func(l, m, s):
-    p0_val = p_0(l, m, s)
-    lq_val = l_q(l, m, s, p0_val)
-    
-    # Cálculos necessários para os prints
-    rho_val = calculate_rho(l, m, s)
-    l_system_val = l_system(l, m, lq_val)
-    wq_val = w_q(l, lq_val)
-    w_system_val = w_system(l, m, l_system_val)
-    
-    p_n_5_val = p_n(l, m, s, 5, p0_val)
-
-    pwq_0_val = p_wq_equals_0(l, m, s, p0_val)
-    pw_greater_3_val = p_w_greater_than_t(l, m, s, 3, p0_val)
-    pwq_greater_2_val = p_wq_greater_than_t(l, m, s, 2, pwq_0_val)
-
+    p0_val = p_0(lambda_val, mu_val, s_val)
+    lq_val = l_q(lambda_val, mu_val, s_val, p0_val)
+    rho_val = calculate_rho(lambda_val, mu_val, s_val)
+    l_system_val = l_system(lambda_val, mu_val, lq_val)
+    wq_val = w_q(lambda_val, lq_val)
+    w_system_val = w_system(lambda_val, mu_val, l_system_val)
+    pn_val = p_n(lambda_val, mu_val, s_val, n, p0_val)
+ 
+    pwq_0_val = p_wq_equals_0(lambda_val, mu_val, s_val, p0_val)
+    pw_greater_n_val = p_w_greater_than_t(lambda_val, mu_val, s_val, n, p0_val)
+    pwq_greater_n_val = p_wq_greater_than_t(lambda_val, mu_val, s_val, n, pwq_0_val)
+ 
     return {
-      "Lq": lq_val,
-      "Wq": wq_val, 
-      "L": l_system_val,
-      "W": w_system_val,
+      "lambda": lambda_val,
+      "mu": mu_val,
+      "ro": rho_val,
       "P0": p0_val,
-      "rho": rho_val,
-      "P_n_5": p_n_5_val,
-      "P_W_greater_3": pw_greater_3_val,
-      "P_Wq_greater_2": pwq_greater_2_val
+      "Pn": pn_val,
+      "P_mais_que_r": pw_greater_n_val,
+      "P_W_maior_t": pwq_greater_n_val,
+      "P_W_igual_0": pwq_0_val,
+      "L": l_system_val,
+      "Lq": lq_val,
+      "W": w_system_val,
+      "Wq": wq_val
     }
     `.trim(),
     preview:
@@ -473,242 +470,232 @@ Este modelo é aplicado em diversos cenários com múltiplos atendentes, como:
     name: 'Modelo M/M/s>1/K',
     fields: [
       {
-        name: 'l',
+        name: 'lambda_val',
         type: 'number',
         description: 'Taxa de chegada (λ)',
       },
       {
-        name: 'm',
+        name: 'mu_val',
         type: 'number',
         description: 'Taxa de serviço (μ)',
       },
       {
-        name: 's',
+        name: 's_val',
         type: 'number',
         description: 'Número de servidores (s)',
       },
       {
-        name: 'K',
+        name: 'n',
+        type: 'number',
+        description: 'Número de clientes (n)',
+      },
+      {
+        name: 'K_val',
         type: 'number',
         description: 'Capacidade do sistema (K)',
       },
     ],
     function: `
 import math
-
+ 
 # --- Funções auxiliares e de cálculo do modelo ---
-
-def calculate_rho(lambda_val, mu_val, s_val):
-    """
-    Calcula o fator de utilização (rho).
-    rho = lambda / (s * mu)
-    """
-    if s_val * mu_val == 0:
-        raise ValueError("s * mu não pode ser zero. Erro de divisão por zero.")
-    return lambda_val / (s_val * mu_val)
-
-def p_0(lambda_val, mu_val, s_val, K_val):
-    """
-    Calcula a probabilidade de ter 0 clientes no sistema (P_0) para um sistema M/M/s/K.
-    P_0 = 1 / [ sum_{n=0}^{s-1} (lambda/mu)^n / n! + (lambda/mu)^s / s! * sum_{n=s+1}^{K} (lambda/(s*mu))^(n-s) ]
-    """
-    if K_val < s_val:
-        raise ValueError("A capacidade do sistema K não pode ser menor que o número de servidores s.")
-
-    sum_n_less_than_S = 0
-    for n in range(s_val):  # Soma de n=0 a s-1
-        sum_n_less_than_S += ((lambda_val / mu_val)**n) / math.factorial(n)
-
-    term_S_part_1 = ((lambda_val / mu_val)**s_val) / math.factorial(s_val)
-
-    sum_n_greater_than_S = 0
-    # A soma vai de n=s+1 até K
-    for n in range(s_val + 1, K_val + 1):
-        sum_n_greater_than_S += (lambda_val / (s_val * mu_val))**(n - s_val)
-    
-    denominator = sum_n_less_than_S + (term_S_part_1 * sum_n_greater_than_S)
-
-    if denominator == 0:
-        raise ValueError("Denominador para P_0 é zero, não é possível calcular P_0.")
-
-    return 1 / denominator
-
-def p_n(lambda_val, mu_val, s_val, K_val, n_val, p0_val):
-    """
-    Calcula a probabilidade de ter n clientes no sistema (P_n) para um sistema M/M/s/K.
-    P_n = (lambda/mu)^n / n! * P_0  para n <= S
-    P_n = (lambda/mu)^n / (s! * s^(n-s)) * P_0 para s < n <= K
-    P_n = 0 para n > K
-    """
-    if n_val < 0:
-        return 0
-    elif n_val <= s_val:
-        return ((lambda_val / mu_val)**n_val / math.factorial(n_val)) * p0_val
-    elif s_val < n_val <= K_val:
-        return (((lambda_val / mu_val)**n_val) / (math.factorial(s_val) * (s_val**(n_val - s_val)))) * p0_val
-    elif n_val > K_val:
-        return 0
-    else:
-        return 0 # Caso para garantir que todos os caminhos retornem um valor
-
-def p_k(lambda_val, mu_val, s_val, K_val, p0_val):
-    """
-    Calcula a probabilidade de ter K clientes no sistema (P_K).
-    Equivalente a p_n(..., K_val)
-    """
-    return p_n(lambda_val, mu_val, s_val, K_val, K_val, p0_val)
-
-def lambda_bar(lambda_val, mu_val, s_val, K_val, p0_val):
-    """
-    Calcula a taxa de chegada efetiva (lambda_bar) para um sistema M/M/s/K.
-    lambda_bar = lambda * (1 - P_K)
-    """
-    p_k_val = p_k(lambda_val, mu_val, s_val, K_val, p0_val)
-    return lambda_val * (1 - p_k_val)
-
-
-def l_q(lambda_val, mu_val, s_val, K_val, p0_val):
-    """
-    Calcula o número médio de clientes na fila (L_q) para um sistema M/M/s/K.
-    L_q = P_0 * (lambda/mu)^s * rho / (s! * (1-rho)^2) * [1 - rho^(K-s) - (K-s)*rho^(K-s)*(1-rho)]
-    """
-    rho = calculate_rho(lambda_val, mu_val, s_val)
-
-    # Termo principal
-    main_term_numerator = p0_val * (lambda_val / mu_val)**s_val * rho
-    main_term_denominator = math.factorial(s_val) * (1 - rho)**2
-
-    if main_term_denominator == 0:
-        raise ValueError("Denominador para L_q é zero. Verifique se rho é 1. As fórmulas fornecidas são para rho < 1.")
-
-    main_term = main_term_numerator / main_term_denominator
-
-    # Termo dentro do colchete
-    bracket_term = 1 - rho**(K_val - s_val) - (K_val - s_val) * rho**(K_val - s_val) * (1 - rho)
-
-    return main_term * bracket_term
-
-def w_q(lambda_val, mu_val, s_val, K_val, p0_val):
-    """
-    Calcula o tempo médio de espera na fila (W_q) para um sistema M/M/s/K.
-    W_q = L_q / lambda_bar
-    """
+def func(lambda_val, mu_val, s_val, n, K_val):
+    def calculate_rho(lambda_val, mu_val, s_val):
+        """
+        Calcula o fator de utilização (rho).
+        rho = lambda / (s * mu)
+        """
+        if s_val * mu_val == 0:
+            raise ValueError("s * mu não pode ser zero. Erro de divisão por zero.")
+        return lambda_val / (s_val * mu_val)
+ 
+    def p_0(lambda_val, mu_val, s_val, K_val):
+        """
+        Calcula a probabilidade de ter 0 clientes no sistema (P_0) para um sistema M/M/s/K.
+        P_0 = 1 / [ sum_{n=0}^{s-1} (lambda/mu)^n / n! + (lambda/mu)^s / s! * sum_{n=s+1}^{K} (lambda/(s*mu))^(n-s) ]
+        """
+        if K_val < s_val:
+            raise ValueError("A capacidade do sistema K não pode ser menor que o número de servidores s.")
+ 
+        sum_n_less_than_S = 0
+        for n in range(s_val):  # Soma de n=0 a s-1
+            sum_n_less_than_S += ((lambda_val / mu_val)**n) / math.factorial(n)
+ 
+        term_S_part_1 = ((lambda_val / mu_val)**s_val) / math.factorial(s_val)
+ 
+        sum_n_greater_than_S = 0
+        # A soma vai de n=s+1 até K
+        for n in range(s_val + 1, K_val + 1):
+            sum_n_greater_than_S += (lambda_val / (s_val * mu_val))**(n - s_val)
+        denominator = sum_n_less_than_S + (term_S_part_1 * sum_n_greater_than_S)
+ 
+        if denominator == 0:
+            raise ValueError("Denominador para P_0 é zero, não é possível calcular P_0.")
+ 
+        return 1 / denominator
+ 
+    def p_n(lambda_val, mu_val, s_val, K_val, n_val, p0_val):
+        """
+        Calcula a probabilidade de ter n clientes no sistema (P_n) para um sistema M/M/s/K.
+        P_n = (lambda/mu)^n / n! * P_0  para n <= S
+        P_n = (lambda/mu)^n / (s! * s^(n-s)) * P_0 para s < n <= K
+        P_n = 0 para n > K
+        """
+        if n_val < 0:
+            return 0
+        elif n_val <= s_val:
+            return ((lambda_val / mu_val)**n_val / math.factorial(n_val)) * p0_val
+        elif s_val < n_val <= K_val:
+            return (((lambda_val / mu_val)**n_val) / (math.factorial(s_val) * (s_val**(n_val - s_val)))) * p0_val
+        elif n_val > K_val:
+            return 0
+        else:
+            return 0 # Caso para garantir que todos os caminhos retornem um valor
+ 
+    def p_k(lambda_val, mu_val, s_val, K_val, p0_val):
+        """
+        Calcula a probabilidade de ter K clientes no sistema (P_K).
+        Equivalente a p_n(..., K_val)
+        """
+        return p_n(lambda_val, mu_val, s_val, K_val, K_val, p0_val)
+ 
+    def lambda_bar(lambda_val, mu_val, s_val, K_val, p0_val):
+        """
+        Calcula a taxa de chegada efetiva (lambda_bar) para um sistema M/M/s/K.
+        lambda_bar = lambda * (1 - P_K)
+        """
+        p_k_val = p_k(lambda_val, mu_val, s_val, K_val, p0_val)
+        return lambda_val * (1 - p_k_val)
+ 
+ 
+    def l_q(lambda_val, mu_val, s_val, K_val, p0_val):
+        """
+        Calcula o número médio de clientes na fila (L_q) para um sistema M/M/s/K.
+        L_q = P_0 * (lambda/mu)^s * rho / (s! * (1-rho)^2) * [1 - rho^(K-s) - (K-s)*rho^(K-s)*(1-rho)]
+        """
+        rho = calculate_rho(lambda_val, mu_val, s_val)
+ 
+        # Termo principal
+        main_term_numerator = p0_val * (lambda_val / mu_val)**s_val * rho
+        main_term_denominator = math.factorial(s_val) * (1 - rho)**2
+ 
+        if main_term_denominator == 0:
+            raise ValueError("Denominador para L_q é zero. Verifique se rho é 1. As fórmulas fornecidas são para rho < 1.")
+ 
+        main_term = main_term_numerator / main_term_denominator
+ 
+        # Termo dentro do colchete
+        bracket_term = 1 - rho**(K_val - s_val) - (K_val - s_val) * rho**(K_val - s_val) * (1 - rho)
+ 
+        return main_term * bracket_term
+ 
+    def w_q(lambda_val, mu_val, s_val, K_val, p0_val):
+        """
+        Calcula o tempo médio de espera na fila (W_q) para um sistema M/M/s/K.
+        W_q = L_q / lambda_bar
+        """
+        lq_val = l_q(lambda_val, mu_val, s_val, K_val, p0_val)
+        lambda_bar_val = lambda_bar(lambda_val, mu_val, s_val, K_val, p0_val)
+ 
+        if lambda_bar_val == 0:
+            return 0.0 # Se não há chegadas efetivas, não há tempo de espera na fila
+        return lq_val / lambda_bar_val
+ 
+    def l_system(lambda_val, mu_val, s_val, K_val, p0_val):
+        """
+        Calcula o número médio de clientes no sistema (L) para um sistema M/M/s/K.
+        L = sum_{n=0}^{s-1} n * P_n + L_q + s * (1 - sum_{n=0}^{s-1} P_n)
+        """
+        lq_val = l_q(lambda_val, mu_val, s_val, K_val, p0_val)
+ 
+        sum_n_pn_less_than_s = 0
+        sum_pn_less_than_s = 0
+        for n in range(s_val): # Soma de n=0 a s-1
+            pn_val = p_n(lambda_val, mu_val, s_val, K_val, n, p0_val)
+            sum_n_pn_less_than_s += n * pn_val
+            sum_pn_less_than_s += pn_val
+        return sum_n_pn_less_than_s + lq_val + (s_val * (1 - sum_pn_less_than_s))
+ 
+    def w_system(lambda_val, mu_val, s_val, K_val, p0_val):
+        """
+        Calcula o tempo médio gasto no sistema (W) para um sistema M/M/s/K.
+        W = L / lambda_bar
+        """
+        l_val = l_system(lambda_val, mu_val, s_val, K_val, p0_val)
+        lambda_bar_val = lambda_bar(lambda_val, mu_val, s_val, K_val, p0_val)
+ 
+        if lambda_bar_val == 0:
+            return 0.0 # Se não há chegadas efetivas, não há tempo gasto no sistema
+        return l_val / lambda_bar_val
+ 
+    # --- Funções de probabilidade de tempo (W e Wq) ---
+ 
+    def p_wq_equals_0(lambda_val, mu_val, s_val, K_val, p0_val):
+        """
+        Calcula a probabilidade do tempo de espera na fila ser 0 (P(Wq = 0)).
+        P(Wq = 0) = sum_{n=0}^{s-1} P_n
+        """
+        sum_pn = 0
+        for n in range(s_val): # Soma de n=0 a s-1
+            sum_pn += p_n(lambda_val, mu_val, s_val, K_val, n, p0_val)
+        return sum_pn
+ 
+    def p_w_greater_than_t(lambda_val, mu_val, s_val, K_val, t_val, p0_val):
+        """
+        Calcula a probabilidade do tempo de espera no sistema (W) ser maior que t.
+        P(W > t) = e^(-mu*t) * [1 + P_0*(lambda/mu)^s / (s!*(1-rho)) * (1 - e^(-mu*(s-1-lambda/mu)*t)) / (s-1-lambda/mu) ]
+        """
+        rho = calculate_rho(lambda_val, mu_val, s_val)
+ 
+        term1 = math.exp(-mu_val * t_val)
+        numerator_inner_bracket = p0_val * (lambda_val / mu_val)**s_val
+        denominator_inner_bracket = math.factorial(s_val) * (1 - rho)
+        if denominator_inner_bracket == 0:
+            raise ValueError("Denominador no parênteses interno de P(W > t) é zero (rho=1). A fórmula fornecida não é aplicável.")
+ 
+        middle_term_fraction = numerator_inner_bracket / denominator_inner_bracket
+        s_minus_1_minus_lambda_over_mu = s_val - 1 - (lambda_val / mu_val)
+        if abs(s_minus_1_minus_lambda_over_mu) < 1e-9: # Usar uma pequena tolerância para zero
+            last_term_fraction = mu_val * t_val
+        else:
+            last_term_fraction = (1 - math.exp(-mu_val * s_minus_1_minus_lambda_over_mu * t_val)) / s_minus_1_minus_lambda_over_mu
+ 
+        return term1 * (1 + middle_term_fraction * last_term_fraction)
+ 
+    def p_wq_greater_than_t(lambda_val, mu_val, s_val, K_val, t_val, p0_val):
+        """
+        Calcula a probabilidade do tempo de espera na fila (W_q) ser maior que t.
+        P(W_q > t) = [1 - P(W_q = 0)] * e^(-s*mu*(1-rho)*t)
+        """
+        rho = calculate_rho(lambda_val, mu_val, s_val)
+        pwq0_val = p_wq_equals_0(lambda_val, mu_val, s_val, K_val, p0_val)
+        return (1 - pwq0_val) * math.exp(-s_val * mu_val * (1 - rho) * t_val)
+ 
+ 
+    p0_val = p_0(lambda_val, mu_val, s_val, K_val)
+    rho_val = calculate_rho(lambda_val, mu_val, s_val)
+    pn_val = p_n(lambda_val, mu_val, s_val, K_val, n, p0_val)
+    pw_greater_n_val = p_w_greater_than_t(lambda_val, mu_val, s_val, K_val, n, p0_val)
+    pwq_greater_n_val = p_wq_greater_than_t(lambda_val, mu_val, s_val, K_val, n, p0_val)
+    pwq_0_val = p_wq_equals_0(lambda_val, mu_val, s_val, K_val, p0_val)
+    l_system_val = l_system(lambda_val, mu_val, s_val, K_val, p0_val)
+    wq_val = w_q(lambda_val, mu_val, s_val, K_val, p0_val)
+    w_system_val = w_system(lambda_val, mu_val, s_val, K_val, p0_val)
     lq_val = l_q(lambda_val, mu_val, s_val, K_val, p0_val)
-    lambda_bar_val = lambda_bar(lambda_val, mu_val, s_val, K_val, p0_val)
-
-    if lambda_bar_val == 0:
-        return 0.0 # Se não há chegadas efetivas, não há tempo de espera na fila
-    return lq_val / lambda_bar_val
-
-def l_system(lambda_val, mu_val, s_val, K_val, p0_val):
-    """
-    Calcula o número médio de clientes no sistema (L) para um sistema M/M/s/K.
-    L = sum_{n=0}^{s-1} n * P_n + L_q + s * (1 - sum_{n=0}^{s-1} P_n)
-    """
-    lq_val = l_q(lambda_val, mu_val, s_val, K_val, p0_val)
-
-    sum_n_pn_less_than_s = 0
-    sum_pn_less_than_s = 0
-    for n in range(s_val): # Soma de n=0 a s-1
-        pn_val = p_n(lambda_val, mu_val, s_val, K_val, n, p0_val)
-        sum_n_pn_less_than_s += n * pn_val
-        sum_pn_less_than_s += pn_val
-    
-    return sum_n_pn_less_than_s + lq_val + (s_val * (1 - sum_pn_less_than_s))
-
-def w_system(lambda_val, mu_val, s_val, K_val, p0_val):
-    """
-    Calcula o tempo médio gasto no sistema (W) para um sistema M/M/s/K.
-    W = L / lambda_bar
-    """
-    l_val = l_system(lambda_val, mu_val, s_val, K_val, p0_val)
-    lambda_bar_val = lambda_bar(lambda_val, mu_val, s_val, K_val, p0_val)
-
-    if lambda_bar_val == 0:
-        return 0.0 # Se não há chegadas efetivas, não há tempo gasto no sistema
-    return l_val / lambda_bar_val
-
-# --- Funções de probabilidade de tempo (W e Wq) ---
-
-def p_wq_equals_0(lambda_val, mu_val, s_val, K_val, p0_val):
-    """
-    Calcula a probabilidade do tempo de espera na fila ser 0 (P(Wq = 0)).
-    P(Wq = 0) = sum_{n=0}^{s-1} P_n
-    """
-    sum_pn = 0
-    for n in range(s_val): # Soma de n=0 a s-1
-        sum_pn += p_n(lambda_val, mu_val, s_val, K_val, n, p0_val)
-    return sum_pn
-
-def p_w_greater_than_t(lambda_val, mu_val, s_val, K_val, t_val, p0_val):
-    """
-    Calcula a probabilidade do tempo de espera no sistema (W) ser maior que t.
-    P(W > t) = e^(-mu*t) * [1 + P_0*(lambda/mu)^s / (s!*(1-rho)) * (1 - e^(-mu*(s-1-lambda/mu)*t)) / (s-1-lambda/mu) ]
-    """
-    rho = calculate_rho(lambda_val, mu_val, s_val)
-
-    term1 = math.exp(-mu_val * t_val)
-    
-    numerator_inner_bracket = p0_val * (lambda_val / mu_val)**s_val
-    denominator_inner_bracket = math.factorial(s_val) * (1 - rho)
-    
-    if denominator_inner_bracket == 0:
-        raise ValueError("Denominador no parênteses interno de P(W > t) é zero (rho=1). A fórmula fornecida não é aplicável.")
-
-    middle_term_fraction = numerator_inner_bracket / denominator_inner_bracket
-    
-    s_minus_1_minus_lambda_over_mu = s_val - 1 - (lambda_val / mu_val)
-    
-    if abs(s_minus_1_minus_lambda_over_mu) < 1e-9: # Usar uma pequena tolerância para zero
-        last_term_fraction = mu_val * t_val
-    else:
-        last_term_fraction = (1 - math.exp(-mu_val * s_minus_1_minus_lambda_over_mu * t_val)) / s_minus_1_minus_lambda_over_mu
-
-    return term1 * (1 + middle_term_fraction * last_term_fraction)
-
-def p_wq_greater_than_t(lambda_val, mu_val, s_val, K_val, t_val, p0_val):
-    """
-    Calcula a probabilidade do tempo de espera na fila (W_q) ser maior que t.
-    P(W_q > t) = [1 - P(W_q = 0)] * e^(-s*mu*(1-rho)*t)
-    """
-    rho = calculate_rho(lambda_val, mu_val, s_val)
-    pwq0_val = p_wq_equals_0(lambda_val, mu_val, s_val, K_val, p0_val)
-    
-    return (1 - pwq0_val) * math.exp(-s_val * mu_val * (1 - rho) * t_val)
-
-def func(l, m, s, K):
-    p0_val = p_0(l, m, s, K)
-    
-    # Calcula Lq
-    lq_val = l_q(l, m, s, K, p0_val)
-
-    # Calcula os demais valores
-    rho_val = calculate_rho(l, m, s)
-    lambda_bar_val = lambda_bar(l, m, s, K, p0_val)
-    l_system_val = l_system(l, m, s, K, p0_val)
-    wq_val = w_q(l, m, s, K, p0_val)
-    w_system_val = w_system(l, m, s, K, p0_val)
-    pn_k_val = p_n(l, m, s, K, K, p0_val) # P_K
-    pn_greater_k_val = p_n(l, m, s, K, K + 1, p0_val) # P_n para n > K (deve ser 0)
-    pw_greater_3_val = p_w_greater_than_t(l, m, s, K, 3, p0_val)
-    pwq_greater_2_val = p_wq_greater_than_t(l, m, s, K, 2, p0_val)
-
+ 
     return {
-      "Lq": lq_val,
-      "Wq": wq_val, 
-      "L": l_system_val,
-      "W": w_system_val,
+      "lambda": lambda_val,
+      "mu": mu_val,
+      "ro": rho_val,
       "P0": p0_val,
-      "rho": rho_val,
-      "lambda_bar": lambda_bar_val,
-      # f"P(n={K})": pn_k_val,
-      # f"P(n>{K})": pn_greater_k_val,
-      # "P(W > 3)": pw_greater_3_val,
-      # "P(Wq > 2)": pwq_greater_2_val,
-      "P_n_K": pn_k_val,
-      "P_n_greater_K": pn_greater_k_val,
-      "P_W_greater_3": pw_greater_3_val,
-      "P_Wq_greater_2": pwq_greater_2_val,
+      "Pn": pn_val,
+      "P_mais_que_r": pw_greater_n_val,
+      "P_W_maior_t": pwq_greater_n_val,
+      "P_W_igual_0": pwq_0_val,
+      "L": l_system_val,
+      "Lq": lq_val,
+      "W": w_system_val,
+      "Wq": wq_val
     }
     `.trim(),
     preview:

@@ -5,7 +5,7 @@ import {
   CardTitle,
 } from '@renderer/components/shadcn/card'
 import { Badge } from '@renderer/components/shadcn/badge'
-import { TrendingUp, Clock, Users, Activity, Timer, Ban } from 'lucide-react'
+import { TrendingUp, Clock, Users, Activity } from 'lucide-react'
 
 interface ResultsDisplayProps {
   results: any
@@ -18,6 +18,9 @@ export function ResultsDisplay({ results, K }: ResultsDisplayProps) {
     return Number(num).toFixed(4)
   }
 
+  // Aceita tanto "ro" quanto "rho"
+  const rho = 'ro' in results ? results.ro : results.rho
+
   const getUtilizationColor = (rho: number) => {
     if (rho < 0.5) return 'bg-green-500'
     if (rho < 0.8) return 'bg-yellow-500'
@@ -29,9 +32,6 @@ export function ResultsDisplay({ results, K }: ResultsDisplayProps) {
     if (rho < 0.8) return 'Utilização moderada'
     return 'Alta utilização'
   }
-
-  // Aceita tanto "ro" quanto "rho"
-  const rho = 'ro' in results ? results.ro : results.rho
 
   return (
     <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
@@ -68,132 +68,76 @@ export function ResultsDisplay({ results, K }: ResultsDisplayProps) {
         {/* Principais métricas */}
         <div className="grid grid-cols-2 gap-4">
           {'L' in results && (
-            <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="h-4 w-4 text-blue-400" />
-                <span className="text-blue-400 text-sm font-medium">
-                  Clientes no Sistema (L)
-                </span>
-              </div>
-              <div className="text-xl font-bold text-white">
-                L = {formatNumber(results.L)}
-              </div>
-            </div>
+            <MetricBlock
+              icon={<Users className="h-4 w-4 text-blue-400" />}
+              label="Clientes no Sistema (L)"
+              value={results.L}
+            />
           )}
-
           {'W' in results && (
-            <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Activity className="h-4 w-4 text-green-400" />
-                <span className="text-green-400 text-sm font-medium">
-                  Tempo no Sistema (W)
-                </span>
-              </div>
-              <div className="text-xl font-bold text-white">
-                W = {formatNumber(results.W)}
-              </div>
-            </div>
+            <MetricBlock
+              icon={<Activity className="h-4 w-4 text-green-400" />}
+              label="Tempo no Sistema (W)"
+              value={results.W}
+            />
           )}
-
           {'Lq' in results && (
-            <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="h-4 w-4 text-purple-400" />
-                <span className="text-purple-400 text-sm font-medium">
-                  Clientes na Fila (Lq)
-                </span>
-              </div>
-              <div className="text-xl font-bold text-white">
-                Lq = {formatNumber(results.Lq)}
-              </div>
-            </div>
+            <MetricBlock
+              icon={<Users className="h-4 w-4 text-purple-400" />}
+              label="Clientes na Fila (Lq)"
+              value={results.Lq}
+            />
           )}
-
           {'Wq' in results && (
-            <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock className="h-4 w-4 text-orange-400" />
-                <span className="text-orange-400 text-sm font-medium">
-                  Tempo na Fila (Wq)
-                </span>
-              </div>
-              <div className="text-xl font-bold text-white">
-                Wq = {formatNumber(results.Wq)}
-              </div>
-            </div>
-          )}
-
-          {'lambda_bar' in results && (
-            <div className="p-4 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Timer className="h-4 w-4 text-cyan-400" />
-                <span className="text-cyan-400 text-sm font-medium">
-                  Taxa efetiva de chegada (λₑₓ)
-                </span>
-              </div>
-              <div className="text-xl font-bold text-white">
-                {formatNumber(results.lambda_bar)}
-              </div>
-            </div>
+            <MetricBlock
+              icon={<Clock className="h-4 w-4 text-orange-400" />}
+              label="Tempo na Fila (Wq)"
+              value={results.Wq}
+            />
           )}
         </div>
 
         {/* Resultados adicionais e probabilidades */}
         <div className="space-y-3">
           {'P0' in results && (
-            <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
-              <span className="text-gray-300">
-                Probabilidade do sistema vazio (P₀)
-              </span>
-              <span className="text-white font-medium">
-                {formatNumber(results.P0)}
-              </span>
-            </div>
+            <ResultLine
+              label="Probabilidade do sistema vazio (P₀)"
+              value={results.P0}
+            />
           )}
-
-          {'P_n_K' in results && (
-            <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
-              <span className="text-gray-300">
-                Probabilidade do sistema cheio (P(n={K ?? '-'}))
-              </span>
-              <span className="text-white font-medium">
-                {formatNumber(results.P_n_K)}
-              </span>
-            </div>
+          {'Pn' in results && (
+            <ResultLine
+              label="Probabilidade de n clientes (Pn)"
+              value={results.Pn}
+            />
           )}
-
-          {'P_n_greater_K' in results && (
-            <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
-              <span className="flex gap-2 items-center text-gray-300">
-                <Ban className="w-4 h-4 text-gray-400" />
-                Probabilidade de overflow (P(n&gt;{K ?? '-'}))
-              </span>
-              <span className="text-white font-medium">
-                {formatNumber(results.P_n_greater_K)}
-              </span>
-            </div>
+          {'P_mais_que_r' in results && (
+            <ResultLine
+              label="Probabilidade de mais que r clientes (P>r)"
+              value={results.P_mais_que_r}
+            />
           )}
-
-          {'P_W_greater_3' in results && (
-            <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
-              <span className="text-gray-300">P(W &gt; 3)</span>
-              <span className="text-white font-medium">
-                {formatNumber(results.P_W_greater_3)}
-              </span>
-            </div>
+          {'P_W_maior_t' in results && (
+            <ResultLine
+              label="Probabilidade do tempo no sistema maior que t (P(W>t))"
+              value={results.P_W_maior_t}
+            />
           )}
-
-          {'P_Wq_greater_2' in results && (
-            <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
-              <span className="text-gray-300">P(Wq &gt; 2)</span>
-              <span className="text-white font-medium">
-                {formatNumber(results.P_Wq_greater_2)}
-              </span>
-            </div>
+          {'P_Wq_maior_t' in results && (
+            <ResultLine
+              label="Probabilidade do tempo na fila maior que t (P(Wq>t))"
+              value={results.P_Wq_maior_t}
+            />
+          )}
+          {'P_W_igual_0' in results && (
+            <ResultLine
+              label="Probabilidade do tempo na fila igual a 0 (P(Wq=0))"
+              value={results.P_W_igual_0}
+            />
           )}
         </div>
 
-        {/* Fórmulas usadas (opcional, pode adaptar) */}
+        {/* Fórmulas usadas */}
         <div className="p-4 rounded-lg bg-gray-800/50 border border-gray-700">
           <h4 className="text-white font-medium mb-3">Fórmulas Utilizadas</h4>
           <div className="text-xs text-gray-300 space-y-1">
@@ -205,13 +149,49 @@ export function ResultsDisplay({ results, K }: ResultsDisplayProps) {
             <div>P(n=K) = probabilidade do sistema cheio</div>
             <div>P(n&gt;K) = overflow</div>
             <div>P(0) = probabilidade do sistema vazio</div>
-            <div>P(W&gt;3) = probabilidade de tempo de espera maior que 3</div>
+            <div>P(W&gt;t) = probabilidade de tempo de espera maior que t</div>
             <div>
-              P(Wq&gt;2) = probabilidade de tempo de espera na fila maior que 2
+              P(Wq&gt;t) = probabilidade de tempo de espera na fila maior que t
             </div>
+            <div>P(Wq=0) = probabilidade de não esperar na fila</div>
           </div>
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+function MetricBlock({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: number
+}) {
+  return (
+    <div className="p-4 rounded-lg bg-white/10 border border-white/20">
+      <div className="flex items-center gap-2 mb-2">
+        {icon}
+        <span className="text-sm font-medium text-white/80">{label}</span>
+      </div>
+      <div className="text-xl font-bold text-white">
+        {Number(value).toFixed(4)}
+      </div>
+    </div>
+  )
+}
+
+function ResultLine({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
+      <span className="text-gray-300">{label}</span>
+      <span className="text-white font-medium">
+        {value === null || value === undefined || isNaN(value)
+          ? 'N/A'
+          : Number(value).toFixed(4)}
+      </span>
+    </div>
   )
 }
