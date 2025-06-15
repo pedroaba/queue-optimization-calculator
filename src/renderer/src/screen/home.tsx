@@ -1,3 +1,4 @@
+import { ModelCardAHP } from '@renderer/components/ahp/card'
 import { FooterSection } from '@renderer/components/footer-section'
 import { ModelCard } from '@renderer/components/model-card'
 import { Input } from '@renderer/components/shadcn/input'
@@ -65,6 +66,8 @@ export function HomeScreen() {
                 </p>
               </div>
             )}
+
+            <ModelCardAHP />
           </div>
         </div>
 
