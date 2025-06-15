@@ -927,17 +927,17 @@ O modelo M/M/s/K é utilizado quando há limitação de capacidade física ou op
     name: 'M/G/1',
     fields: [
       {
-        name: 'lambd',
+        name: 'taxa_chegada',
         type: 'number',
         description: 'Taxa de chegada (λ)',
       },
       {
-        name: 'mu',
+        name: 'taxa_servico',
         type: 'number',
         description: 'Taxa média de atendimento (μ)',
       },
       {
-        name: 'sigma',
+        name: 'desvio_padrao_servico',
         type: 'number',
         description: 'Desvio padrão do tempo de serviço (σ)',
       },
@@ -945,29 +945,108 @@ O modelo M/M/s/K é utilizado quando há limitação de capacidade física ou op
     preview:
       'Sistema de filas com chegada de clientes segundo processo de Poisson (tempos entre chegadas exponenciais), tempo de atendimento com média e desvio padrão genéricos (não necessariamente exponencial), e apenas um servidor (single server). Usado para modelar sistemas em que a variabilidade do tempo de serviço é relevante.',
     function: `
-  def func(lambd: float, mu: float, sigma: float) -> dict[str, float]:
-      ro = lambd / mu
-  
-      if ro >= 1:
-          return {
-              "rho": ro,
-              "error": "O sistema é instável (λ ≥ μ). Os cálculos podem não ser válidos."
-          }
-  
-      sigma2 = sigma ** 2
-  
-      Lq = (lambd**2 * sigma2 + ro**2) / (2 * (1 - ro))
-      L = Lq + ro
-      Wq = Lq / lambd
-      W = Wq + 1 / mu
-  
-      return {
-          "rho": ro,
-          "Lq": Lq,
-          "L": L,
-          "Wq": Wq,
-          "W": W
-      }
+import math
+
+def func(taxa_chegada: float, taxa_servico: float, desvio_padrao_servico: float):
+    """
+    Calcula as métricas de desempenho para um sistema de filas M/G/1.
+
+    Parâmetros:
+        taxa_chegada (float): A taxa de chegada de clientes (λ).
+        taxa_servico (float): A taxa de serviço (μ).
+        desvio_padrao_servico (float): O desvio padrão (σ) do tempo de serviço.
+
+    Retorna:
+        dict: Um dicionário contendo os parâmetros de entrada e os resultados calculados
+              (rho, P0, Lq, Wq, L, W).
+    """
+
+    def calcular_rho_interna(taxa_chegada: float, taxa_servico: float) -> float:
+        """
+        Calcula a intensidade de tráfego (utilização do sistema).
+        ρ = λ / μ
+        """
+        if taxa_servico == 0:
+            return float('inf') # Previne divisão por zero
+        return taxa_chegada / taxa_servico
+
+    def prob_sistema_vazio_interna(rho: float) -> float:
+        """
+        Calcula a probabilidade de haver 0 clientes no sistema.
+        P₀ = 1 - ρ
+        """
+        if rho >= 1:
+            return 0  # O sistema é instável, a fila crescerá infinitamente.
+        return 1 - rho
+
+    def num_medio_clientes_fila_interna(taxa_chegada: float, desvio_padrao_servico: float, rho: float) -> float:
+        """
+        Calcula o número médio de clientes na fila (Lq).
+        Lq = (λ²σ² + ρ²) / (2 * (1 - ρ))
+        """
+        if rho >= 1:
+            return float('inf')  # Fila infinita para sistemas instáveis.
+        
+        lambda_sq = taxa_chegada**2
+        sigma_sq = desvio_padrao_servico**2
+        rho_sq = rho**2
+        
+        numerador = lambda_sq * sigma_sq + rho_sq
+        denominador = 2 * (1 - rho)
+        
+        if denominador == 0: # Caso rho seja muito próximo de 1, evitando divisão por zero
+            return float('inf')
+            
+        return numerador / denominador
+
+    def tempo_medio_espera_fila_interna(lq: float, taxa_chegada: float) -> float:
+        """
+        Calcula o tempo médio de espera na fila (Wq).
+        Wq = Lq / λ
+        """
+        if taxa_chegada == 0:
+            return 0.0 # Se não há chegadas, não há tempo de espera na fila
+        return lq / taxa_chegada
+
+    def num_medio_clientes_sistema_interna(rho: float, lq: float) -> float:
+        """
+        Calcula o número médio de clientes no sistema (L).
+        L = ρ + Lq
+        """
+        return rho + lq
+
+    def tempo_medio_espera_sistema_interna(wq: float, taxa_servico: float) -> float:
+        """
+        Calcula o tempo médio de espera no sistema (W).
+        W = Wq + (1 / μ)
+        """
+        if taxa_servico == 0:
+            return float('inf')
+        return wq + (1 / taxa_servico)
+
+    # --- Cálculos das Métricas ---
+
+    # 1. Calcular a utilização do sistema (rho)
+    rho_val = calcular_rho_interna(taxa_chegada, taxa_servico)
+
+    # 2. Calcular as medidas de efetividade
+    p0_val = prob_sistema_vazio_interna(rho_val)
+    lq_val = num_medio_clientes_fila_interna(taxa_chegada, desvio_padrao_servico, rho_val)
+    wq_val = tempo_medio_espera_fila_interna(lq_val, taxa_chegada)
+    l_val = num_medio_clientes_sistema_interna(rho_val, lq_val)
+    w_val = tempo_medio_espera_sistema_interna(wq_val, taxa_servico)
+
+    return {
+        "taxa_chegada_entrada": taxa_chegada,
+        "taxa_servico_entrada": taxa_servico,
+        "desvio_padrao_servico_entrada": desvio_padrao_servico,
+        "ro": rho_val,
+        "P0": p0_val,
+        "Lq": lq_val,
+        "Wq": wq_val,
+        "L": l_val,
+        "W": w_val
+    }
     `.trim(),
     description: `
   ### Modelo M/G/1
@@ -1009,5 +1088,280 @@ O modelo M/M/s/K é utilizado quando há limitação de capacidade física ou op
   > O modelo M/G/1 é indicado quando o tempo de serviço não é sempre igual ou exponencial, trazendo flexibilidade para modelagem de situações reais.
     `,
     tags: ['new'],
+  },
+  {
+    id: 7,
+    slug: 'mms-priority',
+    name: 'M/M/s com Prioridade',
+    tags: ['new'],
+    preview:
+      'Sistema de filas com múltiplas classes de prioridade, onde cada classe possui uma taxa de chegada distinta e os atendimentos são realizados por múltiplos servidores. O tempo de atendimento segue distribuição exponencial (M/M/s) e as prioridades são tratadas por classes de chegada ordenadas.',
+    fields: [
+      {
+        name: 'taxas_de_chegada',
+        type: 'number[]',
+        description:
+          'Lista de taxas de chegada (λₖ), ordenadas por prioridade (classe 1 = maior prioridade)',
+      },
+      {
+        name: 'taxa_de_servico',
+        type: 'number',
+        description: 'Taxa de serviço por servidor (μ)',
+      },
+      {
+        name: 'num_servidores',
+        type: 'number',
+        description: 'Número de servidores (s)',
+      },
+    ],
+    function: `
+import math
+
+def func(taxas_de_chegada: list, taxa_de_servico: float, num_servidores: int):
+    def calcular_prob_fila_erlang_c(lambda_total: float, mu: float, s: int) -> float:
+        if s == 0:
+            return 1.0
+        rho = lambda_total / (s * mu)
+        if rho >= 1:
+            return 1.0
+        sum_term = sum(((s * rho)**n) / math.factorial(n) for n in range(s))
+        s_term = ((s * rho)**s) / (math.factorial(s) * (1 - rho))
+        Pq = s_term / (sum_term + s_term)
+        return Pq
+
+    def calcular_W_mms_padrao(lambda_total: float, mu: float, s: int) -> float:
+        rho = lambda_total / (s * mu)
+        if rho >= 1:
+            return float('inf')
+        Pq = calcular_prob_fila_erlang_c(lambda_total, mu, s)
+        wq = Pq / (s * mu * (1 - rho))
+        w = wq + (1 / mu)
+        return w
+
+    def tempo_medio_espera_fila(w_k: float, mu: float) -> float:
+        wq_k = w_k - (1 / mu)
+        return max(0, wq_k)
+
+    def num_medio_clientes_sistema_corrigido(sum_lambda_k: float, w_k: float) -> float:
+        return sum_lambda_k * w_k
+
+    def num_medio_clientes_fila_corrigido(l_k: float, sum_lambda_k: float, mu: float) -> float:
+        lq_k = l_k - (sum_lambda_k / mu)
+        return max(0, lq_k)
+
+    w_por_classe = []
+    wq_por_classe = []
+    l_por_classe = []
+    lq_por_classe = []
+    w_barra_agregado = []
+    W_valores_anteriores = []
+
+    for i in range(len(taxas_de_chegada)):
+        classe_prioridade = i + 1
+        lambda_efetiva = sum(taxas_de_chegada[:classe_prioridade])
+        W_bar_k = calcular_W_mms_padrao(lambda_efetiva, taxa_de_servico, num_servidores)
+        w_barra_agregado.append(W_bar_k)
+
+        soma_ponderada_W_anteriores = 0
+        for j in range(i):
+            p_j = taxas_de_chegada[j] / lambda_efetiva
+            soma_ponderada_W_anteriores += p_j * W_valores_anteriores[j]
+
+        lambda_k = taxas_de_chegada[i]
+        p_k = lambda_k / lambda_efetiva
+        if p_k == 0:
+            W_k = float('inf')
+        else:
+            W_k = (1 / p_k) * (W_bar_k - soma_ponderada_W_anteriores)
+
+        W_valores_anteriores.append(W_k)
+
+        Wq_k = tempo_medio_espera_fila(W_k, taxa_de_servico)
+        L_k = num_medio_clientes_sistema_corrigido(lambda_efetiva, W_k)
+        Lq_k = num_medio_clientes_fila_corrigido(L_k, lambda_efetiva, taxa_de_servico)
+
+        w_por_classe.append(W_k)
+        wq_por_classe.append(Wq_k)
+        l_por_classe.append(L_k)
+        lq_por_classe.append(Lq_k)
+
+    return {
+        "taxas_de_chegada_entrada": taxas_de_chegada,
+        "taxa_de_servico_entrada": taxa_de_servico,
+        "num_servidores_entrada": num_servidores,
+        "W_barra_agregado": w_barra_agregado,
+        "W_por_classe": w_por_classe,
+        "Wq_por_classe": wq_por_classe,
+        "L_por_classe": l_por_classe,
+        "Lq_por_classe": lq_por_classe
+    }
+  `.trim(),
+    description: `
+### Modelo M/M/s com Prioridade
+
+O modelo **M/M/s com prioridade** é uma extensão do clássico sistema M/M/s, considerando **classes de prioridade** onde cada classe possui sua **própria taxa de chegada (λₖ)**.
+
+#### Características
+
+- Chegadas segundo processo de Poisson (M)
+- Tempo de atendimento exponencial (M)
+- Múltiplos servidores (s)
+- Tratamento por **prioridade não-preemptiva** baseado em classes
+- Cada classe de prioridade possui uma **taxa de chegada diferente**
+- As classes são processadas considerando ordem de prioridade (classe 1 = mais prioritária)
+
+#### Fórmulas principais
+
+- **W̄ (M/M/s):** tempo médio no sistema da fila padrão
+- **Wₖ:** tempo médio no sistema para a classe k
+- **Wqₖ:** tempo médio na fila da classe k
+- **Lₖ:** número médio de clientes no sistema da classe k
+- **Lqₖ:** número médio na fila da classe k
+
+#### Aplicações
+
+- Suporte técnico com diferentes SLAs
+- Atendimento bancário com categorias de cliente
+- Sistemas hospitalares com triagem por urgência
+- Redes de computadores com QoS (qualidade de serviço)
+
+> Permite entender como diferentes prioridades afetam o desempenho de cada classe.
+`.trim(),
+  },
+  {
+    id: 8,
+    slug: 'mss-without-preemption',
+    name: 'M/M/s com Prioridade Não Preemptiva',
+    tags: ['new'],
+    preview:
+      'Sistema de filas com múltiplas classes de prioridade, múltiplos servidores e disciplina de atendimento sem interrupção (não preemptiva). Cada classe possui sua própria taxa de chegada.',
+    fields: [
+      {
+        name: 'taxas_de_chegada',
+        type: 'number[]',
+        description: 'Lista de taxas de chegada (λₖ) ordenadas por prioridade',
+      },
+      {
+        name: 'taxa_de_servico',
+        type: 'number',
+        description: 'Taxa de serviço por servidor (μ)',
+      },
+      {
+        name: 'num_servidores',
+        type: 'number',
+        description: 'Número de servidores (s)',
+      },
+    ],
+    function: `
+import math
+
+def func(taxas_de_chegada: list, taxa_de_servico: float, num_servidores: int):
+    def calcular_W_sem_interrupcao_interna(k: int, lambdas: list[float], mu: float, s: int) -> float:
+        if s == 0:
+            return float('inf')
+        lambda_total = sum(lambdas)
+        rho = lambda_total / (s * mu)
+        if rho >= 1:
+            return float('inf')
+        r = lambda_total / mu
+        sum_factor = 0
+        for j in range(s):
+            try:
+                sum_factor += (r**j) / math.factorial(j)
+            except OverflowError:
+                return float('inf')
+        try:
+            p0_inv_term1 = math.factorial(s) * ((s * mu - lambda_total) / (r**s)) * sum_factor
+            p0_inv = p0_inv_term1 + s * mu
+        except (ValueError, ZeroDivisionError, OverflowError):
+            return float('inf')
+        if p0_inv == 0:
+            return float('inf')
+        wq0_factor = 1 / p0_inv
+
+        k_idx = k - 1
+        sum_lambda_k_menos_1 = sum(lambdas[:k_idx])
+        sum_lambda_k = sum(lambdas[:k_idx + 1])
+        rho_k_menos_1 = sum_lambda_k_menos_1 / (s * mu)
+        rho_k = sum_lambda_k / (s * mu)
+
+        if (1 - rho_k_menos_1) == 0 or (1 - rho_k) == 0:
+            return float('inf')
+
+        priority_factor = 1 / ((1 - rho_k_menos_1) * (1 - rho_k))
+        wq_k = wq0_factor * priority_factor
+        w_k = wq_k + (1 / mu)
+        return w_k
+
+    def tempo_medio_espera_fila(w_k: float, mu: float) -> float:
+        return max(0, w_k - (1 / mu))
+
+    def num_medio_clientes_sistema(lambda_k: float, w_k: float) -> float:
+        return lambda_k * w_k
+
+    def num_medio_clientes_fila(l_k: float, lambda_k: float, mu: float) -> float:
+        return max(0, l_k - (lambda_k / mu))
+
+    resultados_W = []
+    resultados_Wq = []
+    resultados_L = []
+    resultados_Lq = []
+
+    for i, lambda_k in enumerate(taxas_de_chegada):
+        classe_prioridade = i + 1
+        W = calcular_W_sem_interrupcao_interna(classe_prioridade, taxas_de_chegada, taxa_de_servico, num_servidores)
+        Wq = tempo_medio_espera_fila(W, taxa_de_servico)
+        L = num_medio_clientes_sistema(lambda_k, W)
+        Lq = num_medio_clientes_fila(L, lambda_k, taxa_de_servico)
+        resultados_W.append(W)
+        resultados_Wq.append(Wq)
+        resultados_L.append(L)
+        resultados_Lq.append(Lq)
+
+    return {
+        "taxas_de_chegada_entrada": taxas_de_chegada,
+        "taxa_de_servico_entrada": taxa_de_servico,
+        "num_servidores_entrada": num_servidores,
+        "W_por_classe": resultados_W,
+        "Wq_por_classe": resultados_Wq,
+        "L_por_classe": resultados_L,
+        "Lq_por_classe": resultados_Lq
+    }
+  `.trim(),
+    description: `
+### Modelo M/M/s com Prioridade Não Preemptiva
+
+Sistema de filas com múltiplas classes, cada uma com sua própria taxa de chegada (λₖ), atendidas por múltiplos servidores (s) com taxa de serviço comum (μ). A prioridade é não preemptiva: clientes de menor prioridade não são interrompidos ao serem atendidos.
+
+#### Fórmulas principais
+
+- **ρ = λ / (s × μ)**  
+- **Fator base de espera:**  
+  \\[
+  Wq₀ = \\frac{1}{\\text{fórmula baseada em Erlang-C modificada}}
+  \\]
+- **Fator de prioridade para classe \\(k\\):**  
+  \\[
+  P_k = \\frac{1}{(1 - \\rho_{k-1})(1 - \\rho_k)}
+  \\]
+- **Tempo de espera:**  
+  \\[
+  W_k = Wq₀ × P_k + \\frac{1}{μ}
+  \\]
+- **Outras métricas:**  
+  \\[
+  Wq_k = W_k - \\frac{1}{μ},\\quad
+  L_k = λ_k × W_k,\\quad
+  Lq_k = L_k - \\frac{λ_k}{μ}
+  \\]
+
+#### Aplicações
+
+- Suporte técnico com SLA por perfil
+- Atendimento público por grau de urgência
+- Processos fabris com ordens prioritárias
+
+> Esse modelo é útil quando a **ordem de chegada** respeita prioridades, mas o atendimento de clientes **não pode ser interrompido**.
+  `.trim(),
   },
 ]

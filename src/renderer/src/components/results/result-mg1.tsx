@@ -8,6 +8,10 @@ import { Badge } from '@renderer/components/shadcn/badge'
 import { TrendingUp, Users, Activity, Clock, AlertTriangle } from 'lucide-react'
 
 interface MG1Result {
+  taxa_chegada_entrada?: number
+  taxa_servico_entrada?: number
+  desvio_padrao_servico_entrada?: number
+  P0?: number
   rho: number
   Lq?: number
   L?: number
@@ -55,6 +59,52 @@ export function ResultDisplayMG1({ results }: ResultDisplayMG1Props) {
           </div>
         )}
 
+        {/* Parâmetros de Entrada */}
+        <div className="grid grid-cols-3 gap-4">
+          {'taxa_chegada_entrada' in results && (
+            <div className="p-4 rounded-lg bg-gray-700 border border-gray-600">
+              <div className="text-sm text-gray-300 mb-1">
+                Taxa de Chegada (λ)
+              </div>
+              <div className="text-white font-bold text-lg">
+                {formatNumber(results.taxa_chegada_entrada)}
+              </div>
+            </div>
+          )}
+          {'taxa_servico_entrada' in results && (
+            <div className="p-4 rounded-lg bg-gray-700 border border-gray-600">
+              <div className="text-sm text-gray-300 mb-1">
+                Taxa de Serviço (μ)
+              </div>
+              <div className="text-white font-bold text-lg">
+                {formatNumber(results.taxa_servico_entrada)}
+              </div>
+            </div>
+          )}
+          {'desvio_padrao_servico_entrada' in results && (
+            <div className="p-4 rounded-lg bg-gray-700 border border-gray-600">
+              <div className="text-sm text-gray-300 mb-1">
+                Desvio Padrão do Serviço (σ)
+              </div>
+              <div className="text-white font-bold text-lg">
+                {formatNumber(results.desvio_padrao_servico_entrada)}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Resultado Intermediário */}
+        {'P0' in results && (
+          <div className="p-4 rounded-lg bg-slate-700 border border-slate-600">
+            <div className="text-sm text-gray-300 mb-1">
+              Probabilidade de 0 clientes (P₀)
+            </div>
+            <div className="text-white font-bold text-lg">
+              {formatNumber(results.P0)}
+            </div>
+          </div>
+        )}
+
         {/* Utilização do Sistema */}
         {'rho' in results && (
           <div className="p-4 rounded-lg bg-white/5 border border-white/10">
@@ -73,7 +123,9 @@ export function ResultDisplayMG1({ results }: ResultDisplayMG1Props) {
             </div>
             <div className="w-full bg-gray-700 rounded-full h-2">
               <div
-                className={`h-2 rounded-full ${getUtilizationColor(results.rho)}`}
+                className={`h-2 rounded-full ${getUtilizationColor(
+                  results.rho,
+                )}`}
                 style={{ width: `${Math.min(results.rho * 100, 100)}%` }}
               />
             </div>
@@ -95,7 +147,6 @@ export function ResultDisplayMG1({ results }: ResultDisplayMG1Props) {
               </div>
             </div>
           )}
-
           {'Lq' in results && (
             <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
               <div className="flex items-center gap-2 mb-2">
@@ -109,7 +160,6 @@ export function ResultDisplayMG1({ results }: ResultDisplayMG1Props) {
               </div>
             </div>
           )}
-
           {'W' in results && (
             <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
               <div className="flex items-center gap-2 mb-2">
@@ -123,7 +173,6 @@ export function ResultDisplayMG1({ results }: ResultDisplayMG1Props) {
               </div>
             </div>
           )}
-
           {'Wq' in results && (
             <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20">
               <div className="flex items-center gap-2 mb-2">

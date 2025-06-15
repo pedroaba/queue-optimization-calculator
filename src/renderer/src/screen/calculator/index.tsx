@@ -32,6 +32,8 @@ import { ResultsDisplay as ResultViewMM1N } from '@renderer/components/results/r
 import { ResultsDisplay as ResultViewMMS } from '@renderer/components/results/result-mms'
 import { ResultsDisplay as ResultViewMMSK } from '@renderer/components/results/result-mmsk'
 import { ResultDisplayMG1 } from '@renderer/components/results/result-mg1'
+import { ResultDisplayMMSPrioridade } from '@renderer/components/results/result-mms-with-priority'
+import { ResultDisplayMMSPrioridadeNaoPreemptiva } from '@renderer/components/results/result-without-preemption'
 
 export function Calculator() {
   const { id } = useParams()
@@ -44,32 +46,48 @@ export function Calculator() {
 
   const model = useMemo(() => {
     return models.find((model) => model.id === Number(id))
-  }, [])
+  }, [id])
 
   // Função de cálculo via Pyodide
   async function handleCalculate(data: any) {
-    if (!model?.function) {
-      return
-    }
+    if (!model?.function) return
 
     const keys = Object.keys(data)
     let hasUnfilledFields = false
     for (const key of keys) {
       if (!data[key]) {
         toast.error('Preencha todos os campos', {
-          description: `Preencha o campo \"${key}\"`,
+          description: `Preencha o campo "${key}"`,
         })
-
         hasUnfilledFields = true
       }
     }
+    if (hasUnfilledFields) return
 
-    if (hasUnfilledFields) {
-      return
-    }
+    // Converte listas string para number[] se necessário
+    model.fields.forEach((field) => {
+      const value = data[field.name]
+      if (field.type === 'number[]') {
+        try {
+          data[field.name] = value
+            .split(',')
+            .map((v: string) => parseFloat(v.trim()))
+            .filter((n: number) => !isNaN(n))
+        } catch {
+          data[field.name] = []
+        }
+      }
+    })
 
     const params = model.fields.reduce((params, field) => {
-      return [...params, `${field.name}=${data[field.name]}`]
+      const value = data[field.name]
+      if (field.type === 'number[]') {
+        return [...params, `${field.name}=${JSON.stringify(value)}`]
+      } else if (field.type === 'number') {
+        return [...params, `${field.name}=${parseFloat(value)}`]
+      } else {
+        return [...params, `${field.name}=${JSON.stringify(value)}`]
+      }
     }, [] as string[])
 
     startTransition(async () => {
@@ -80,20 +98,17 @@ result = None
 try:
   result = func(${params.join(', ')})
 except Exception as e:
-  result = {
-    'erro': str(e)
-  }
+  result = { 'erro': str(e) }
 result
-      `.trim(),
+        `.trim(),
       )
 
-      // console.log(JSON.stringify(result))
       const resultInJs = await result.toJs()
       setResult(resultInJs)
 
       if (
         resultInJs.erro &&
-        !(resultInJs.erro === "name 'undefined' is not defined")
+        resultInJs.erro !== "name 'undefined' is not defined"
       ) {
         toast.error('Ocorreu um erro ao calcular o resultado', {
           description: resultInJs.erro,
@@ -106,11 +121,7 @@ result
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <div className="min-h-screen p-4 md:p-6 !pb-0">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
           <Header modelName={model?.name || ''} />
-
-          {/* Status do Sistema */}
-          {/* <SystemStatus status={systemStatus} /> */}
 
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1">
@@ -122,7 +133,6 @@ result
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  {/* Parâmetros principais */}
                   <Form {...form}>
                     <form
                       className="space-y-4"
@@ -131,6 +141,7 @@ result
                     >
                       {model?.fields.map((modelField) => (
                         <FormField
+                          key={modelField.name}
                           control={form.control}
                           name={modelField.name}
                           render={({ field }) => (
@@ -139,16 +150,30 @@ result
                                 {modelField.description}
                               </FormLabel>
                               <FormControl>
-                                <Input
-                                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 h-9"
-                                  {...field}
-                                  onChange={(e) => {
-                                    const filtered = onlyNumbers(e.target.value)
-                                    field.onChange(filtered)
-                                  }}
-                                  inputMode="decimal"
-                                  autoComplete="off"
-                                />
+                                {modelField.type === 'number[]' ? (
+                                  <Input
+                                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 h-9"
+                                    placeholder="Ex: 1.2, 2.5, 4"
+                                    {...field}
+                                    onChange={(e) =>
+                                      field.onChange(e.target.value)
+                                    }
+                                    autoComplete="off"
+                                  />
+                                ) : (
+                                  <Input
+                                    className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 h-9"
+                                    {...field}
+                                    onChange={(e) => {
+                                      const filtered = onlyNumbers(
+                                        e.target.value,
+                                      )
+                                      field.onChange(filtered)
+                                    }}
+                                    inputMode="decimal"
+                                    autoComplete="off"
+                                  />
+                                )}
                               </FormControl>
                             </FormItem>
                           )}
@@ -168,45 +193,8 @@ result
                   </Button>
                 </CardContent>
               </Card>
-
-              {/* Quick Stats */}
-              {/* {inputs.lambda &&
-                inputs.mu &&
-                parseFloat(inputs.lambda) > 0 &&
-                parseFloat(inputs.mu) > 0 && (
-                  <Card className="mt-6 bg-white/5 border-white/10 backdrop-blur-sm">
-                    <CardHeader>
-                      <CardTitle className="text-white text-lg flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4" />
-                        Pré-visualização
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-300">Utilização (ρ)</span>
-                        <span className="text-white font-medium">
-                          {(
-                            parseFloat(inputs.lambda) / parseFloat(inputs.mu)
-                          ).toFixed(3)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-300">Taxa efetiva</span>
-                        <span className="text-white font-medium">
-                          {(
-                            (parseFloat(inputs.lambda) /
-                              parseFloat(inputs.mu)) *
-                            100
-                          ).toFixed(1)}
-                          %
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )} */}
             </div>
 
-            {/* Results Panel */}
             <div className="lg:col-span-2">
               {results ? (
                 <>
@@ -228,6 +216,14 @@ result
                   {model?.slug === 'mg1' && (
                     <ResultDisplayMG1 results={results} />
                   )}
+                  {model?.slug === 'mms-priority' && (
+                    <ResultDisplayMMSPrioridade results={results} />
+                  )}
+                  {model?.slug === 'mss-without-preemption' && (
+                    <ResultDisplayMMSPrioridadeNaoPreemptiva
+                      results={results}
+                    />
+                  )}
                 </>
               ) : (
                 <PendingResultCalc isReadyToCalculate />
@@ -236,10 +232,9 @@ result
           </div>
         </div>
 
-        {/* Footer */}
         <FooterSection className="mt-16">
           <span>•</span>
-          <span>Modelo M/M/1</span>
+          <span>{model?.name}</span>
         </FooterSection>
       </div>
     </div>
