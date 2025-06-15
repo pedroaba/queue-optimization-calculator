@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer, app } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
 import { electronAPI, ElectronAPI } from '@electron-toolkit/preload'
@@ -16,19 +16,22 @@ declare global {
 }
 
 function getPyodideBase(): string {
-  // Em dev:  <repo root>/out/renderer/pyodide
-  // Em build: <Resources>/app.asar.unpacked/out/renderer/pyodide
-  const dir = app.isPackaged
-    ? join(
+  const isDev =
+    process.env.ELECTRON_RENDERER_URL || // electron-vite dev
+    process.defaultApp || // `electron .`
+    /node_modules[\\/]electron[\\/]/.test(process.execPath)
+
+  const dir = isDev
+    ? join(__dirname, '..', '..', 'out', 'renderer', 'pyodide') // dev
+    : join(
         process.resourcesPath,
         'app.asar.unpacked',
         'out',
         'renderer',
         'pyodide',
-      )
-    : join(__dirname, '..', '..', 'out', 'renderer', 'pyodide')
+        'pyodide',
+      ) // prod
 
-  // Transformamos em URL file:// para o loadPyodide
   return pathToFileURL(dir).href
 }
 
