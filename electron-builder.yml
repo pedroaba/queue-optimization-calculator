@@ -3,13 +3,16 @@ productName: Queue Models Calculator
 directories:
   buildResources: build
 files:
-  - '!**/.vscode/*'
-  - '!src/*'
+  - 'dist/**'
+  - 'dist/renderer/pyodide/**'  # <-- garante a inclusão no app
+  - '!**/.vscode/**'
+  - '!src/**'
   - '!electron.vite.config.{js,ts,mjs,cjs}'
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
+  - dist/renderer/pyodide/**  # <-- garante que não seja empacotado no app.asar
   - resources/**
 win:
   executableName: queue-optimization-calculator
