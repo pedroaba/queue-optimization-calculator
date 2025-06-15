@@ -11,9 +11,11 @@ export function usePyodide() {
         return
       }
 
+      const base = window.PYODIDE_BASE_URL ?? './pyodide/'
+
       // @ts-ignore
       const pyodideInstance = await window.loadPyodide({
-        indexURL: './pyodide/',
+        indexURL: base,
       })
 
       setPyodide(pyodideInstance)
