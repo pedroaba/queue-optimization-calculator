@@ -1,11 +1,9 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge } from 'electron'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
 import { electronAPI, ElectronAPI } from '@electron-toolkit/preload'
 
-export interface API {
-  calculate: (params: { inputs: string; model: string }) => Promise<void>
-}
+export interface API {}
 
 declare global {
   interface Window {
@@ -15,43 +13,38 @@ declare global {
   }
 }
 
-function getPyodideBase(): string {
+function resolvePyodidePath(): string {
   const isDev =
-    process.env.ELECTRON_RENDERER_URL || // electron-vite dev
-    process.defaultApp || // `electron .`
+    process.env.ELECTRON_RENDERER_URL ||
+    process.defaultApp ||
     /node_modules[\\/]electron[\\/]/.test(process.execPath)
 
-  const dir = isDev
-    ? join(__dirname, '..', '..', 'out', 'renderer', 'pyodide') // dev
-    : join(
-        process.resourcesPath,
-        'app.asar.unpacked',
-        'out',
-        'renderer',
-        'pyodide',
-        'pyodide',
-      ) // prod
+  const devPath = join(__dirname, '..', '..', 'out', 'renderer', 'pyodide')
+  const prodPath = join(
+    process.resourcesPath,
+    'app.asar.unpacked',
+    'out',
+    'renderer',
+    'pyodide',
+    'pyodide',
+  )
 
+  const dir = isDev ? devPath : prodPath
   return pathToFileURL(dir).href
 }
 
-const api = {
-  calculate: async function (params: { inputs: string; model: string }) {
-    const result = await ipcRenderer.invoke('send-zmq-message', params)
-    console.log(result)
-  },
-}
+const api = {}
 
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
-    contextBridge.exposeInMainWorld('PYODIDE_BASE_URL', getPyodideBase())
+    contextBridge.exposeInMainWorld('PYODIDE_BASE_URL', resolvePyodidePath())
   } catch (error) {
     console.error(error)
   }
 } else {
   window.electron = electronAPI
   window.api = api
-  window.PYODIDE_BASE_URL = getPyodideBase()
+  window.PYODIDE_BASE_URL = resolvePyodidePath()
 }
