@@ -1229,6 +1229,99 @@ O modelo **M/M/s com prioridade** é uma extensão do clássico sistema M/M/s, c
 `.trim(),
   },
   {
+    id: 9,
+    slug: 'mm1n-finite-population',
+    name: 'Modelo M/M/1/N com População Finita',
+    fields: [
+      {
+        name: 'N',
+        type: 'number',
+        description: 'Número total de unidades no sistema (N)',
+      },
+      {
+        name: 'tempo_medio_entre_falhas',
+        type: 'number',
+        description: 'Tempo médio entre falhas (em horas)',
+      },
+      {
+        name: 'tempo_medio_conserto',
+        type: 'number',
+        description: 'Tempo médio de conserto (em horas)',
+      },
+    ],
+    function: `
+def func(N, tempo_medio_entre_falhas, tempo_medio_conserto):
+    lambda_individual = 1 / tempo_medio_entre_falhas
+    mu = 1 / tempo_medio_conserto
+
+    Pn = [0] * (N + 1)
+    Pn[0] = 1
+
+    for n in range(1, N + 1):
+        lambda_n_minus_1 = (N - (n - 1)) * lambda_individual
+        Pn[n] = Pn[n - 1] * (lambda_n_minus_1 / mu)
+
+    soma_Pn = sum(Pn)
+    Pn = [p / soma_Pn for p in Pn]
+    P0 = Pn[0]
+
+    L = sum(n * Pn[n] for n in range(N + 1))
+    Lq = sum((n - 1) * Pn[n] for n in range(1, N + 1))
+    lambda_efetiva = sum((N - n) * lambda_individual * Pn[n] for n in range(N + 1))
+
+    W = L / lambda_efetiva if lambda_efetiva > 0 else float('inf')
+    Wq = Lq / lambda_efetiva if lambda_efetiva > 0 else float('inf')
+    tempo_ocioso = P0 * 100
+
+    return {
+        "P0": P0,
+        "Pn_list": Pn,
+        "L": L,
+        "Lq": Lq,
+        "lambdaEfetiva": lambda_efetiva,
+        "W": W,
+        "Wq": Wq,
+        "tempoOcioso": tempo_ocioso
+    }
+  `.trim(),
+    preview:
+      'Modelo de fila M/M/1/N com população finita, considerando unidades que falham e precisam de conserto com técnico exclusivo.',
+    description: `
+### Modelo M/M/1/N com População Finita
+
+Esse modelo representa um **sistema de conserto** com população limitada de unidades (por exemplo, máquinas ou equipamentos). É usado para analisar a disponibilidade e eficiência de técnicos de manutenção.
+
+#### Características principais
+
+- Há **N unidades** no sistema, que podem falhar e precisam de reparo.
+- Um único **técnico (servidor)** realiza os consertos.
+- A **taxa de falha de cada unidade** é \( λ_i = 1 / \text{tempo médio entre falhas} \).
+- A **taxa de serviço (conserto)** é \( μ = 1 / \text{tempo médio de conserto} \).
+- Quando uma unidade está em manutenção, ela não pode falhar novamente.
+
+#### Métricas calculadas
+
+- **P₀**: Probabilidade de o técnico estar ocioso.
+- **Pn_list**: Lista com as probabilidades de haver n unidades quebradas.
+- **L**: Número médio de unidades quebradas.
+- **Lq**: Número médio de unidades esperando pelo conserto.
+- **λ efetiva**: Taxa de falhas que de fato entram no sistema de manutenção.
+- **W**: Tempo médio que uma unidade permanece quebrada.
+- **Wq**: Tempo médio de espera antes de conserto.
+- **tempoOcioso**: Porcentagem do tempo em que o técnico está sem consertar.
+
+#### Aplicações
+
+- Manutenção de máquinas industriais.
+- Equipamentos eletrônicos sob assistência técnica.
+- Infraestrutura com técnico único responsável por reparos.
+
+> Esse modelo ajuda a dimensionar a equipe de manutenção ideal e prever a indisponibilidade dos equipamentos.
+  `,
+    tags: ['new'],
+  },
+
+  {
     id: 8,
     slug: 'mss-without-preemption',
     name: 'M/M/s com Prioridade Não Preemptiva',

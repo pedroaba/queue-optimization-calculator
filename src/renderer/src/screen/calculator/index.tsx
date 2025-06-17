@@ -34,6 +34,7 @@ import { ResultsDisplay as ResultViewMMSK } from '@renderer/components/results/r
 import { ResultDisplayMG1 } from '@renderer/components/results/result-mg1'
 import { ResultDisplayMMSPrioridade } from '@renderer/components/results/result-mms-with-priority'
 import { ResultDisplayMMSPrioridadeNaoPreemptiva } from '@renderer/components/results/result-without-preemption'
+import { ResultsDisplay as ResultDisplayMM1NFinite } from '@renderer/components/results/result-mm1n-finite'
 
 export function Calculator() {
   const { id } = useParams()
@@ -223,6 +224,9 @@ result
                     <ResultDisplayMMSPrioridadeNaoPreemptiva
                       results={results}
                     />
+                  )}
+                  {model?.slug === 'mm1n-finite-population' && (
+                    <ResultDisplayMM1NFinite results={results} />
                   )}
                 </>
               ) : (
