@@ -63,33 +63,13 @@ function ModelCardComp({ model }: ModelCardProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col justify-between items-start grow">
-        <div className="space-y-3 grow">
-          <p className="text-white font-medium text-sm">Parâmetros:</p>
-          <div className="flex flex-wrap gap-2">
-            {model.fields.map((field, index) => (
-              <Tooltip key={index}>
-                <TooltipTrigger>
-                  <span className="text-xs px-3 py-1 bg-white/10 rounded-full text-gray-300">
-                    {field.name}
-                  </span>
-                </TooltipTrigger>
-
-                <TooltipContent className="max-w-96">
-                  {field.description}
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </div>
-          {/* {model.available && ( */}
-
-          {/* )} */}
-        </div>
+        <div className="space-y-3 grow"></div>
         <Button
           className="w-full mt-4 bg-cyan-600 hover:bg-cyan-700 text-white"
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
-            navigate(`/model/${model.id}`)
+            navigate(`/calculator/${model.slug}`)
           }}
         >
           Abrir Calculadora

@@ -2,6 +2,7 @@ import { contextBridge } from 'electron'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
 import { electronAPI, ElectronAPI } from '@electron-toolkit/preload'
+import { is } from '@electron-toolkit/utils'
 
 export interface API {}
 
@@ -17,7 +18,8 @@ function resolvePyodidePath(): string {
   const isDev =
     process.env.ELECTRON_RENDERER_URL ||
     process.defaultApp ||
-    /node_modules[\\/]electron[\\/]/.test(process.execPath)
+    /node_modules[\\/]electron[\\/]/.test(process.execPath) ||
+    is.dev
 
   const devPath = join(__dirname, '..', '..', 'out', 'renderer', 'pyodide')
   const prodPath = join(
