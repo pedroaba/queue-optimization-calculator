@@ -5,7 +5,6 @@ import icon from '../../resources/icon.png?asset'
 
 import { registerRoute } from '../lib/electron-router-dom'
 import { setupWindowListeners } from './ipc/window'
-import { setupZmqIpc } from './ipc/zmq'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -47,7 +46,6 @@ app.whenReady().then(() => {
   })
 
   setupWindowListeners()
-  setupZmqIpc()
   createWindow()
 
   app.on('activate', function () {
