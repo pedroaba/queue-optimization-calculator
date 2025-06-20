@@ -11,6 +11,7 @@ import { MG1Calculator } from './screen/calculator/mg1/calculator'
 import { MSSWithPriorityCalculator } from './screen/calculator/mss-with-priority/calculator'
 import { MM1NFinitePopulationCalculator } from './screen/calculator/mm1n-finite-population/calculator'
 import { MSSNonPreemptivePriorityCalculator } from './screen/calculator/mss-non-preemptive-priority/calculator'
+import { MMSGreaterThanOneNCalculator } from './screen/calculator/mms-greater-than-1-n/calculator'
 
 export function AppRoutes() {
   return (
@@ -42,6 +43,10 @@ export function AppRoutes() {
           <Route
             path="/calculator/mss-without-preemption"
             element={<MSSNonPreemptivePriorityCalculator />}
+          />
+          <Route
+            path="/calculator/mms-greater-than-1-n"
+            element={<MMSGreaterThanOneNCalculator />}
           />
         </>
       }

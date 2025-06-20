@@ -475,4 +475,44 @@ Sistema de filas com múltiplas classes, cada uma com sua própria taxa de chega
 > Esse modelo é útil quando a **ordem de chegada** respeita prioridades, mas o atendimento de clientes **não pode ser interrompido**.
   `.trim(),
   },
+  {
+    id: 10,
+    slug: 'mms-greater-than-1-n',
+    name: 'Modelo M/M/s/N com População Finita',
+    preview:
+      'Modelo de fila M/M/s/N com população finita, permitindo múltiplos servidores e limitação no número de clientes/unidades no sistema.',
+    description: `
+### Modelo M/M/s/N com População Finita
+
+Esse modelo representa um **sistema de filas com múltiplos servidores** e **população finita** de clientes/unidades, onde apenas um número limitado de elementos pode estar no sistema a qualquer momento (por exemplo, máquinas para manutenção, pacientes em um hospital, etc.).
+
+#### Características principais
+
+- Há **N unidades** (ou clientes) na população total.
+- Existem **s servidores** operando em paralelo.
+- A **taxa de falha (ou chegada) individual** é \\( \\lambda_{ind} = 1 / \\text{tempo médio entre falhas} \\).
+- A **taxa de serviço** de cada servidor é \\( \\mu = 1 / \\text{tempo médio de serviço/conserto} \\).
+- O número de unidades no sistema nunca ultrapassa N.
+
+#### Métricas calculadas
+
+- **P₀**: Probabilidade de todos os servidores estarem ociosos (sistema vazio).
+- **PnList**: Lista com as probabilidades de haver n unidades no sistema.
+- **L**: Número médio de unidades no sistema (quebradas ou em atendimento).
+- **Lq**: Número médio de unidades aguardando serviço (na fila).
+- **lambdaEffective**: Taxa efetiva de chegada (ou falhas atendidas).
+- **W**: Tempo médio no sistema (espera + serviço/conserto).
+- **Wq**: Tempo médio de espera na fila.
+- **idlePercentage**: Porcentagem do tempo em que todos os servidores estão ociosos.
+
+#### Aplicações
+
+- Manutenção de equipamentos com múltiplos técnicos.
+- Atendimento em hospitais com leitos limitados.
+- Serviços de TI, impressão, ou call centers com capacidade limitada e vários atendentes.
+
+> Este modelo é ideal para estimar indisponibilidade, filas e necessidade de recursos em cenários onde a população de “clientes” ou “equipamentos” é limitada e existem múltiplos servidores atuando simultaneamente.
+  `,
+    tags: [],
+  },
 ]
