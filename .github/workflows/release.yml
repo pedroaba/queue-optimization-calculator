@@ -45,16 +45,6 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install libarchive-tools rpm
 
-      # ----- Baixar e extrair Pyodide -----
-      - name: Baixar e extrair Pyodide (Linux/macOS)
-        if: matrix.os != 'windows-latest'
-        run: bash .github/scripts/download-pyodide.sh
-
-      - name: Baixar e extrair Pyodide (Windows)
-        if: matrix.os == 'windows-latest'
-        run: pwsh .github/scripts/download-pyodide-win.ps1
-      # ------------------------------------
-
       - name: Release Electron app
         if: matrix.os == 'macos-latest'
         run: bash .github/scripts/build/build-macos-app.sh
