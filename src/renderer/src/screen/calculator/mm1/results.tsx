@@ -215,6 +215,80 @@ export function MM1ResultCalculator({ results }: ResultsDisplayProps) {
           </div>
         </div>
       </div>
+
+      {/* Fórmulas utilizadas */}
+      <div className="mt-10">
+        <div className="flex items-center mb-3">
+          <Calculator className="w-5 h-5 mr-2 text-violet-400" />
+          <h3 className="text-lg font-semibold text-violet-400">
+            Fórmulas Utilizadas (M/M/1)
+          </h3>
+        </div>
+        <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-700/50 text-base">
+          <ul className="space-y-3 text-white">
+            <li>
+              <b>Fator de Utilização (ρ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                ρ = λ / μ
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade do sistema vazio (P₀):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                P₀ = 1 - ρ
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade de ter n clientes no sistema (Pₙ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Pₙ = (1 - ρ) · ρⁿ
+              </pre>
+            </li>
+            <li>
+              <b>Número médio de clientes no sistema (L):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                L = ρ / (1 - ρ)
+              </pre>
+            </li>
+            <li>
+              <b>Número médio de clientes na fila (Lq):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Lq = ρ² / (1 - ρ)
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio no sistema (W):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                W = 1 / (μ - λ)
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio na fila (Wq):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Wq = ρ / (μ - λ)
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade de mais de r clientes (P(&gt; r)):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                P(&gt; r) = ρ^&#123;r+1&#125;
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade do tempo no sistema &gt; t (P(W &gt; t)):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                P(W &gt; t) = ρ · e^&#123;&#123;-μ (1-ρ) t&#125;&#125;
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade do tempo na fila &gt; t (P(Wq &gt; t)):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                P(Wq &gt; t) = ρ · e^&#123;&#123; -μ (1-ρ) t&#125;&#125;
+              </pre>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   )
 }

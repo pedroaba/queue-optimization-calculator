@@ -254,6 +254,78 @@ export function MM1NResultCalculator({ results }: ResultsDisplayProps) {
           </div>
         </div>
       </div>
+
+      {/* Fórmulas utilizadas */}
+      <div className="mt-10">
+        <div className="flex items-center mb-3">
+          <BarChartIcon className="w-5 h-5 mr-2 text-violet-400" />
+          <h3 className="text-lg font-semibold text-violet-400">
+            Fórmulas Utilizadas (M/M/1/N)
+          </h3>
+        </div>
+        <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-700/50 text-base">
+          <ul className="space-y-3 text-white">
+            <li>
+              <b>Fator de Utilização (ρ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                ρ = λ / μ
+              </pre>
+            </li>
+            <li>
+              <b>Parâmetro a:</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                a = λ / μ
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade de ter n clientes (Pₙ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                {`Pₙ = [aⁿ / n!] · P₀   para n = 0, 1, ..., N
+
+onde:
+P₀ = 1 / Σ [aᶦ / i!],  para i = 0 até N
+`}
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade do sistema cheio (Pₙ=N ou P_block):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                P_block = Pₙ=N
+              </pre>
+            </li>
+            <li>
+              <b>Taxa efetiva de chegada (λ Efetivo):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                λ_efetivo = λ · (1 - P_block)
+              </pre>
+            </li>
+            <li>
+              <b>Número médio de clientes no sistema (L):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                {`L = Σ [n · Pₙ],  para n = 0 até N`}
+              </pre>
+            </li>
+            <li>
+              <b>Número médio na fila (Lq):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Lq = L - (1 - P₀)
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio no sistema (W):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                W = L / λ_efetivo
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio na fila (Wq):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Wq = Lq / λ_efetivo
+              </pre>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   )
 }

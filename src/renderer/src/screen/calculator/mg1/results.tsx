@@ -162,6 +162,68 @@ export function MG1ResultCalculator({ results }: ResultsDisplayProps) {
           </div>
         </div>
       </div>
+
+      {/* Fórmulas utilizadas */}
+      <div className="mt-10">
+        <div className="flex items-center mb-3">
+          <Calculator className="w-5 h-5 mr-2 text-violet-400" />
+          <h3 className="text-lg font-semibold text-violet-400">
+            Fórmulas Utilizadas (M/G/1)
+          </h3>
+        </div>
+        <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-700/50 text-base">
+          <ul className="space-y-3 text-white">
+            <li>
+              <b>Fator de Utilização (ρ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                ρ = λ / μ
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio de serviço (E[S]):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                E[S] = 1 / μ
+              </pre>
+            </li>
+            <li>
+              <b>Variância do tempo de serviço (Var[S]):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Var[S] = σ²
+              </pre>
+            </li>
+            <li>
+              <b>Número médio de clientes no sistema (L):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                L = ρ + (λ² · σ² + ρ²) / [2 · (1 - ρ)]
+              </pre>
+            </li>
+            <li>
+              <b>Número médio de clientes na fila (Lq):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Lq = (λ² · σ² + ρ²) / [2 · (1 - ρ)]
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio no sistema (W):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                W = L / λ
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio na fila (Wq):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Wq = Lq / λ
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade do sistema vazio (P₀):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                P₀ = 1 - ρ
+              </pre>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   )
 }

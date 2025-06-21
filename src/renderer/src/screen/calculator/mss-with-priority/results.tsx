@@ -129,6 +129,86 @@ export function MSSWithPriorityResultCalculator({
           {JSON.stringify(results, null, 2)}
         </pre>
       </div>
+
+      {/* Fórmulas utilizadas */}
+      <div className="mt-10">
+        <div className="flex items-center mb-3">
+          <Calculator className="w-5 h-5 mr-2 text-violet-400" />
+          <h3 className="text-lg font-semibold text-violet-400">
+            Fórmulas Utilizadas (M/M/s com Prioridade)
+          </h3>
+        </div>
+        <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-700/50 text-base">
+          <ul className="space-y-3 text-white">
+            <li>
+              <b>Taxa de chegada da classe k (λₖ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                λₖ = taxa de chegada para a classe de prioridade k
+              </pre>
+            </li>
+            <li>
+              <b>Taxa de serviço (μ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                μ = taxa de atendimento por servidor
+              </pre>
+            </li>
+            <li>
+              <b>Número de servidores (s):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                s = quantidade de servidores no sistema
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio no sistema por classe (Wₖ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Wₖ = Tempo médio total no sistema para clientes da classe k
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio na fila por classe (Wqₖ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Wqₖ = Tempo médio aguardando na fila para classe k
+              </pre>
+            </li>
+            <li>
+              <b>Número médio no sistema por classe (Lₖ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Lₖ = λₖ · Wₖ
+              </pre>
+            </li>
+            <li>
+              <b>Número médio na fila por classe (Lqₖ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Lqₖ = λₖ · Wqₖ
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio ponderado (W̄):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                W̄ₖ = Soma ponderada dos tempos médios, considerando todas as
+                classes até k
+              </pre>
+            </li>
+            <li>
+              <b>Notas sobre cálculo de espera:</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                {`Para sistemas de prioridade, as classes mais prioritárias têm impacto direto sobre as classes inferiores.
+Wq₁ (classe 1): igual ao M/M/s tradicional para λ₁
+Para k > 1, 
+Wqₖ = Wq₁ + (efeito acumulado das classes superiores)
+O cálculo exato pode envolver fórmulas recursivas ou sistemas lineares de equações.
+`}
+              </pre>
+            </li>
+          </ul>
+          <div className="text-sm text-gray-400 mt-6">
+            <span className="font-bold text-gray-200">Nota:</span> O cálculo
+            para cada classe pode variar conforme o tipo de prioridade
+            (preemptiva ou não), mas a lógica de influência das classes
+            superiores é mantida.
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

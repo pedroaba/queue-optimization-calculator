@@ -205,6 +205,104 @@ export function MMSGreaterThanOneNResultCalculator({
           </div>
         </div>
       </div>
+
+      {/* Fórmulas utilizadas */}
+      <div className="mt-10">
+        <div className="flex items-center mb-3">
+          <Calculator className="w-5 h-5 mr-2 text-violet-400" />
+          <h3 className="text-lg font-semibold text-violet-400">
+            Fórmulas Utilizadas (M/M/s/N - População Finita)
+          </h3>
+        </div>
+        <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-700/50 text-base">
+          <ul className="space-y-3 text-white">
+            <li>
+              <b>N:</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Tamanho da população total (clientes possíveis)
+              </pre>
+            </li>
+            <li>
+              <b>
+                Taxa de chegada individual (λ<sub>ind</sub>):
+              </b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                λ<sub>ind</sub> = 1 / (tempo médio entre chegadas)
+              </pre>
+            </li>
+            <li>
+              <b>
+                Taxa de chegada efetiva para n clientes (λ<sub>n</sub>):
+              </b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                λ<sub>n</sub> = (N - n) · λ<sub>ind</sub>
+              </pre>
+            </li>
+            <li>
+              <b>
+                Taxa de serviço total para n clientes (μ<sub>n</sub>):
+              </b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                μ<sub>n</sub> = min(n, s) · μ
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade de ter n clientes (Pₙ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                {`P₀ = 1 / Σ [ Π (λᵢ / μᵢ) ] para i=1 até n, soma n=0 até N
+
+Pₙ = [ Π (λᵢ / μᵢ) ] · P₀   para n = 1 até N
+(usar λᵢ e μᵢ conforme acima)
+`}
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade do sistema vazio (P₀):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Conforme acima, usando a soma de produtos para n=0 até N
+              </pre>
+            </li>
+            <li>
+              <b>Utilização média dos servidores (ρ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                ρ = (λ<sub>efetiva</sub>) / (s · μ)
+              </pre>
+            </li>
+            <li>
+              <b>
+                Taxa efetiva de chegada (λ<sub>efetiva</sub>):
+              </b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                λ<sub>efetiva</sub> = Σ [λ<sub>n</sub> · Pₙ] para n=0 até N-1
+              </pre>
+            </li>
+            <li>
+              <b>Número médio de clientes no sistema (L):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                L = Σ [n · Pₙ] para n=0 até N
+              </pre>
+            </li>
+            <li>
+              <b>Número médio na fila (Lq):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Lq = L - (1 - P₀)
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio no sistema (W):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                W = L / λ<sub>efetiva</sub>
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio na fila (Wq):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Wq = Lq / λ<sub>efetiva</sub>
+              </pre>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   )
 }

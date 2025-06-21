@@ -274,6 +274,118 @@ export function MMSGreaterThanOneKResultCalculator({
           </div>
         </div>
       </div>
+
+      {/* Fórmulas utilizadas */}
+      <div className="mt-10">
+        <div className="flex items-center mb-3">
+          <Calculator className="w-5 h-5 mr-2 text-violet-400" />
+          <h3 className="text-lg font-semibold text-violet-400">
+            Fórmulas Utilizadas (M/M/s/K)
+          </h3>
+        </div>
+        <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-700/50 text-base">
+          <ul className="space-y-3 text-white">
+            <li>
+              <b>Fator de Utilização (ρ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                ρ = λ / (s · μ)
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade do sistema vazio (P₀):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                {`P₀ = 1 /
+  (
+    Σ [ (λ/μ)^n / n! ] de n=0 até s-1
+    +
+    Σ [ (λ/μ)^n / (s! · s^{n-s}) ] de n=s até K
+  )
+`}
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade de haver n clientes (Pₙ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                {`Se n < s:
+  Pₙ = [ (λ/μ)^n / n! ] · P₀
+
+Se n ≥ s:
+  Pₙ = [ (λ/μ)^n / (s! · s^{n-s}) ] · P₀
+`}
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade do sistema cheio (Pᴋ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Pᴋ = Pₙ para n = K
+              </pre>
+            </li>
+            <li>
+              <b>
+                Taxa efetiva de chegada (λ<sub>efetivo</sub>):
+              </b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                λ<sub>efetivo</sub> = λ · (1 - Pᴋ)
+              </pre>
+            </li>
+            <li>
+              <b>Número médio de clientes no sistema (L):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                L = Σ [n · Pₙ] para n = 0 até K
+              </pre>
+            </li>
+            <li>
+              <b>Número médio na fila (Lq):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Lq = L - (λ<sub>efetivo</sub> / μ)
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio no sistema (W):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                W = L / λ<sub>efetivo</sub>
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio na fila (Wq):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Wq = Lq / λ<sub>efetivo</sub>
+              </pre>
+            </li>
+            <li>
+              <b>
+                Probabilidade do tempo no sistema ser maior que t (P(W &gt; t)):
+              </b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                P(W &gt; t) ≈ e<sup>-μ(1-ρ)t</sup> (aproximação)
+              </pre>
+            </li>
+            <li>
+              <b>
+                Probabilidade do tempo de espera na fila ser maior que t (P(Wq
+                &gt; t)):
+              </b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                P(Wq &gt; t) ≈ e<sup>-μ(1-ρ)t</sup> (aproximação)
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade de não esperar na fila (P(Wq = 0)):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                P(Wq = 0) = 1 - P_espera
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade de esperar na fila (P_espera):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                {`P_espera = [ (λ/μ)^s / (s! · (1 - ρ)) ] · P₀
+(para o caso de s < K)
+`}
+              </pre>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   )
 }

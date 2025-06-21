@@ -197,6 +197,106 @@ export function MM1NFinitePopulationResultCalculator({
           ))}
         </div>
       </div>
+
+      {/* Fórmulas utilizadas */}
+      <div className="mt-10">
+        <div className="flex items-center mb-3">
+          <Calculator className="w-5 h-5 mr-2 text-violet-400" />
+          <h3 className="text-lg font-semibold text-violet-400">
+            Fórmulas Utilizadas (M/M/1/N com População Finita)
+          </h3>
+        </div>
+        <div className="bg-slate-900/70 rounded-xl p-6 border border-slate-700/50 text-base">
+          <ul className="space-y-3 text-white">
+            <li>
+              <b>N:</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Número total de unidades no sistema
+              </pre>
+            </li>
+            <li>
+              <b>Taxa de falha individual (λ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                λ = 1 / (tempo médio entre falhas)
+              </pre>
+            </li>
+            <li>
+              <b>Taxa de conserto (μ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                μ = 1 / (tempo médio de conserto)
+              </pre>
+            </li>
+            <li>
+              <b>
+                Taxa de chegada efetiva (λ<sub>n</sub>):
+              </b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                λₙ = (N - n) · λ
+              </pre>
+            </li>
+            <li>
+              <b>
+                Taxa de serviço efetiva (μ<sub>n</sub>):
+              </b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                μₙ = μ (se há unidade para consertar; 0 se não há)
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade de ter n unidades quebradas (Pₙ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                {`P₀ = 1 / Σ [Π ( (N-i)·λ / μ )] para i=1 até n; soma para n=0 até N
+
+Pₙ = [Π ( (N-i+1)·λ / μ )] · P₀   para n = 1 até N`}
+              </pre>
+            </li>
+            <li>
+              <b>Utilização do técnico (ρ):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                ρ = 1 - P₀
+              </pre>
+            </li>
+            <li>
+              <b>Probabilidade de todas as unidades estarem quebradas:</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                P(n = N) = P<sub>all broken</sub>
+              </pre>
+            </li>
+            <li>
+              <b>Número médio de unidades quebradas (L):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                L = Σ [n · Pₙ] (n de 0 a N)
+              </pre>
+            </li>
+            <li>
+              <b>Número médio de unidades aguardando conserto (Lq):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Lq = L - (1 - P₀)
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio quebrada (W):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                W = L / λ<sub>efetiva</sub>
+              </pre>
+            </li>
+            <li>
+              <b>Tempo médio aguardando conserto (Wq):</b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                Wq = Lq / λ<sub>efetiva</sub>
+              </pre>
+            </li>
+            <li>
+              <b>
+                λ<sub>efetiva</sub> (taxa efetiva de falhas atendidas):
+              </b>
+              <pre className="bg-slate-800/60 rounded p-2 text-sm mt-1 overflow-x-auto">
+                λ<sub>efetiva</sub> = Σ [λₙ · Pₙ] (n de 0 a N-1)
+              </pre>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   )
 }
