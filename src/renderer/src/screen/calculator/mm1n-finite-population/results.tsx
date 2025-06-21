@@ -51,7 +51,7 @@ export function MM1NFinitePopulationResultCalculator({
       </div>
 
       {/* Parâmetros usados */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
         <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-600/30">
           <div className="flex items-center text-blue-300 text-sm mb-1">N</div>
           <div className="font-bold text-white">{results.N}</div>
@@ -77,6 +77,16 @@ export function MM1NFinitePopulationResultCalculator({
           </div>
           <div className="text-xs text-gray-400">
             Porcentagem do tempo ocioso
+          </div>
+        </div>
+
+        <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-600/30">
+          <div className="flex items-center text-yellow-300 text-sm mb-1">
+            P0
+          </div>
+          <div className="font-bold text-white">{formatNumber(results.P0)}</div>
+          <div className="text-xs text-gray-400">
+            Probabilidade de nenhuma unidade quebrada
           </div>
         </div>
       </div>
@@ -112,6 +122,52 @@ export function MM1NFinitePopulationResultCalculator({
             Todas as unidades indisponíveis
           </div>
         </div>
+      </div>
+
+      {/* Custos por Hora */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div className="bg-gradient-to-br from-yellow-600/20 to-yellow-800/20 rounded-xl p-5 border border-yellow-500/30">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm text-yellow-300 font-medium">
+              Custo por hora - máquinas paradas
+            </div>
+            <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+          </div>
+          <div className="text-3xl font-bold text-yellow-400 mb-1">
+            R$ {formatNumber(results.stopMachineCostPerHour, 2)}
+          </div>
+          <div className="text-xs text-yellow-200">
+            Total gasto por hora com máquinas paradas
+          </div>
+        </div>
+        <div className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 rounded-xl p-5 border border-blue-500/30">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm text-blue-300 font-medium">
+              Custo por hora - técnico
+            </div>
+            <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+          </div>
+          <div className="text-3xl font-bold text-blue-400 mb-1">
+            R$ {formatNumber(results.technicianCostPerHour, 2)}
+          </div>
+          <div className="text-xs text-blue-200">
+            Total gasto por hora com técnico em manutenção
+          </div>
+        </div>
+        {/* <div className="bg-gradient-to-br col-span-2 from-green-600/20 to-green-800/20 rounded-xl p-5 border border-green-500/30">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm text-green-300 font-medium">
+              Custo diário total
+            </div>
+            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+          </div>
+          <div className="text-3xl font-bold text-green-400 mb-1">
+            R$ {formatNumber(results.dailyCost, 2)}
+          </div>
+          <div className="text-xs text-green-200">
+            Total gasto por dia (8 horas)
+          </div>
+        </div> */}
       </div>
 
       {/* Métricas das Unidades */}

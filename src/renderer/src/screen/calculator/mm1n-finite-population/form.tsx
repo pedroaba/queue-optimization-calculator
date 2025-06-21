@@ -20,6 +20,8 @@ export function MM1NFinitePopulationFormCalculator({ onCalculate }: FormProps) {
     N: 0,
     meanTimeToFailure: 0,
     meanRepairTime: 0,
+    machineStopCostPerHour: 0, // novo campo
+    technicianCostPerHour: 0, // novo campo
   })
 
   const handleInputChange = (field: keyof Parameters, value: string) => {
@@ -44,8 +46,11 @@ export function MM1NFinitePopulationFormCalculator({ onCalculate }: FormProps) {
       return
     }
     try {
+      console.log('Calculando M/M/1/N com população finita:', parameters)
       const results = mm1nFinitePopulation(parameters)
       onCalculate(results)
+
+      console.log('Resultados do cálculo:', results)
       toast.success('Cálculo realizado com sucesso', {
         description: 'Os resultados foram calculados com sucesso!',
       })
@@ -129,6 +134,54 @@ export function MM1NFinitePopulationFormCalculator({ onCalculate }: FormProps) {
           />
           <p className="text-xs text-gray-400 mt-1">
             Tempo médio para reparar uma unidade
+          </p>
+        </div>
+
+        {/* Custo por hora de máquina parada */}
+        <div className="bg-slate-700/30 p-4 rounded-lg border border-slate-600/30">
+          <Label
+            htmlFor="machineStopCostPerHour"
+            className="text-gray-200 font-medium"
+          >
+            Custo por hora de máquina parada *
+          </Label>
+          <Input
+            id="machineStopCostPerHour"
+            step="0.01"
+            min="0"
+            value={parameters.machineStopCostPerHour || ''}
+            onChange={(e) =>
+              handleInputChange('machineStopCostPerHour', e.target.value)
+            }
+            className="bg-slate-700 border-slate-500 text-white placeholder-gray-400 mt-2 focus:border-blue-400 focus:ring-blue-400"
+            placeholder="Ex: 30"
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Valor em reais por hora que cada máquina parada custa
+          </p>
+        </div>
+
+        {/* Custo por hora do técnico */}
+        <div className="bg-slate-700/30 p-4 rounded-lg border border-slate-600/30">
+          <Label
+            htmlFor="technicianCostPerHour"
+            className="text-gray-200 font-medium"
+          >
+            Custo por hora do técnico *
+          </Label>
+          <Input
+            id="technicianCostPerHour"
+            step="0.01"
+            min="0"
+            value={parameters.technicianCostPerHour || ''}
+            onChange={(e) =>
+              handleInputChange('technicianCostPerHour', e.target.value)
+            }
+            className="bg-slate-700 border-slate-500 text-white placeholder-gray-400 mt-2 focus:border-blue-400 focus:ring-blue-400"
+            placeholder="Ex: 10"
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Valor em reais por hora trabalhada do técnico de manutenção
           </p>
         </div>
       </div>
