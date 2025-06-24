@@ -145,10 +145,10 @@ export function mm1k(params: Parameters): Results {
   }
 
   // Tempo médio no sistema (W)
-  const W = lambdaBar.gt(0) ? L.div(lambdaBar) : new Decimal(0)
+  const W = lambdaBar.gt(0) ? L.div(lambdaBar.mul(60)) : new Decimal(0)
 
   // Tempo médio de espera na fila (Wq)
-  const Wq = lambdaBar.gt(0) ? Lq.div(lambdaBar) : new Decimal(0)
+  const Wq = lambdaBar.gt(0) ? Lq.div(lambdaBar).mul(60) : new Decimal(0)
 
   // Utilização do sistema (rho)
   const rho = λ.div(s.mul(μ))

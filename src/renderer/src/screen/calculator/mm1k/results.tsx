@@ -249,7 +249,7 @@ export function MM1KResultCalculator({ results }: ResultsDisplayProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600/30">
               <div className="text-sm text-gray-300 mb-2">
-                W (Tempo no Sistema)
+                W (Tempo no Sistema) em minutos
               </div>
               <div className="text-2xl font-bold text-yellow-400 mb-1">
                 {formatNumber(results.W)}
@@ -258,7 +258,7 @@ export function MM1KResultCalculator({ results }: ResultsDisplayProps) {
             </div>
             <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600/30">
               <div className="text-sm text-gray-300 mb-2">
-                Wq (Tempo na Fila)
+                Wq (Tempo na Fila) em minutos
               </div>
               <div className="text-2xl font-bold text-yellow-400 mb-1">
                 {formatNumber(results.Wq)}

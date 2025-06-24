@@ -51,7 +51,6 @@ export function MMSGreaterThanOneKResultCalculator({
           Resultados do Sistema M/M/s&gt;1/K
         </h2>
       </div>
-
       {/* Parâmetros usados */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-600/30">
@@ -94,7 +93,6 @@ export function MMSGreaterThanOneKResultCalculator({
           <div className="text-xs text-gray-400">Tempo para P(W&gt;t)</div>
         </div>
       </div>
-
       <div className="space-y-6">
         {/* Utilização, P0, PK, λEfetivo */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -171,41 +169,47 @@ export function MMSGreaterThanOneKResultCalculator({
         </div>
 
         {/* Probabilidades de tempo de espera */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600/30">
-            <div className="flex items-center mb-2">
-              <Timer className="w-4 h-4 mr-2 text-cyan-400" />
-              <div className="text-sm text-gray-300">P(W &gt; t)</div>
-            </div>
-            <div className="text-2xl font-bold text-cyan-400 mb-1">
-              {formatPercent(results.P_W_greater_than_t)}
-            </div>
-            <div className="text-xs text-gray-400">
-              Probabilidade do tempo no sistema ser maior que t
-            </div>
+        {/* Probabilidades */}
+        <div className="bg-slate-700/40 rounded-xl p-6 border border-slate-600/40">
+          <div className="flex items-center mb-4">
+            <Calculator className="w-5 h-5 mr-2 text-orange-400" />
+            <h3 className="text-lg font-semibold text-orange-400">
+              Probabilidades
+            </h3>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600/30">
-            <div className="flex items-center mb-2">
-              <Timer className="w-4 h-4 mr-2 text-yellow-400" />
-              <div className="text-sm text-gray-300">P(Wq &gt; t)</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600/30">
+              <div className="text-sm text-gray-300 mb-2">P(N ≥ s)</div>
+              <div className="text-2xl font-bold text-orange-400 mb-1">
+                {formatPercent(results.P_N_geq_s)}
+              </div>
+              <div className="text-xs text-gray-400">
+                Probabilidade do sistema ocupado
+              </div>
             </div>
-            <div className="text-2xl font-bold text-yellow-400 mb-1">
-              {formatPercent(results.P_Wq_greater_than_t)}
+
+            <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600/30">
+              <div className="text-sm text-gray-300 mb-2">P(W &gt; t)</div>
+              <div className="text-2xl font-bold text-orange-400 mb-1">
+                {formatPercent(results.P_W_greater_than_t)}
+              </div>
+              <div className="text-xs text-gray-400">Tempo sistema &gt; t</div>
             </div>
-            <div className="text-xs text-gray-400">
-              Probabilidade do tempo de espera na fila ser maior que t
+
+            <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600/30">
+              <div className="text-sm text-gray-300 mb-2">P(Wq &gt; t)</div>
+              <div className="text-2xl font-bold text-orange-400 mb-1">
+                {formatPercent(results.P_Wq_greater_than_t)}
+              </div>
+              <div className="text-xs text-gray-400">Tempo fila &gt; t</div>
             </div>
-          </div>
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600/30">
-            <div className="flex items-center mb-2">
-              <Timer className="w-4 h-4 mr-2 text-green-400" />
-              <div className="text-sm text-gray-300">P(Wq = 0)</div>
-            </div>
-            <div className="text-2xl font-bold text-green-400 mb-1">
-              {formatPercent(results.P_Wq_equals_0)}
-            </div>
-            <div className="text-xs text-gray-400">
-              Probabilidade de tempo de espera ser zero
+
+            <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600/30">
+              <div className="text-sm text-gray-300 mb-2">P(Wq = 0)</div>
+              <div className="text-2xl font-bold text-orange-400 mb-1">
+                {formatPercent(results.P_Wq_equals_0)}
+              </div>
+              <div className="text-xs text-gray-400">Prob. espera = 0</div>
             </div>
           </div>
         </div>
@@ -255,7 +259,7 @@ export function MMSGreaterThanOneKResultCalculator({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600/30">
               <div className="text-sm text-gray-300 mb-2">
-                W (Tempo no Sistema)
+                W (Tempo no Sistema) em minutos
               </div>
               <div className="text-2xl font-bold text-yellow-400 mb-1">
                 {formatNumber(results.W)}
@@ -264,7 +268,7 @@ export function MMSGreaterThanOneKResultCalculator({
             </div>
             <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600/30">
               <div className="text-sm text-gray-300 mb-2">
-                Wq (Tempo na Fila)
+                Wq (Tempo na Fila) em minutos
               </div>
               <div className="text-2xl font-bold text-yellow-400 mb-1">
                 {formatNumber(results.Wq)}
@@ -274,7 +278,6 @@ export function MMSGreaterThanOneKResultCalculator({
           </div>
         </div>
       </div>
-
       {/* Fórmulas utilizadas */}
       <div className="mt-10">
         <div className="flex items-center mb-3">
@@ -385,7 +388,8 @@ Se n ≥ s:
             </li>
           </ul>
         </div>
-      </div>
+      </div>{' '}
+      em horas
     </div>
   )
 }
