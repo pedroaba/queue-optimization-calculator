@@ -33,8 +33,8 @@ export interface Results {
  * Calcula as métricas do modelo de fila M/M/1 com alta precisão
  */
 export function mm1(params: Parameters): Results {
-  const lambda = new Decimal(params.lambda).div(params.T) // taxa de chegada (λ)
-  const mu = new Decimal(params.mu).div(params.T) // taxa de atendimento (μ)
+  const lambda = new Decimal(params.lambda) // taxa de chegada (λ)
+  const mu = new Decimal(params.mu) // taxa de atendimento (μ)
 
   const rho = lambda.div(mu) // fator de utilização
 
@@ -62,7 +62,7 @@ export function mm1(params: Parameters): Results {
   const PgtR = rho.pow(params.r + 1) // probabilidade de ter mais de r clientes
 
   // P(W > t) = probabilidade de um cliente passar mais de t unidades de tempo no sistema
-  const PwGreaterThanT = Decimal.exp(mu.mul(one.sub(rho)).mul(params.t).neg())
+  const PwGreaterThanT = Decimal.exp(mu.neg().mul(P0).mul(params.t))
 
   // P(Wq > t) = probabilidade de um cliente esperar mais que t unidades de tempo na fila
   const PwqGreaterThanT = rho.mul(PwGreaterThanT)
@@ -74,10 +74,10 @@ export function mm1(params: Parameters): Results {
   const Lq = lambda.pow(2).div(mu.mul(mu.sub(lambda)))
 
   // Tempo médio que um cliente passa no sistema
-  const W = one.div(mu.sub(lambda))
+  const W = one.div(mu.sub(lambda)).mul(60)
 
   // Tempo médio que um cliente espera na fila
-  const Wq = lambda.div(mu.mul(mu.sub(lambda)))
+  const Wq = lambda.div(mu.mul(mu.sub(lambda))).mul(60)
 
   return {
     rho: rho.toNumber(),

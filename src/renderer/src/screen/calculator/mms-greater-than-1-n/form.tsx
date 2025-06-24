@@ -52,6 +52,7 @@ export function MMSGreaterThanOneNFormCalculator({ onCalculate }: FormProps) {
         description: 'Os resultados foram calculados com sucesso!',
       })
     } catch (error) {
+      console.error('Erro ao calcular:', error)
       toast.error('Erro no cálculo', {
         description:
           'Ocorreu um erro ao calcular as métricas. Verifique os parâmetros.',
