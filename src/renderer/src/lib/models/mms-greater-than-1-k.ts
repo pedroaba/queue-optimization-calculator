@@ -48,7 +48,7 @@ export function mmsk(params: Parameters): Results {
     throw new Error('A taxa de chegada (lambda) deve ser maior que zero.')
   if (mu <= 0)
     throw new Error('A taxa de serviço (mu) deve ser maior que zero.')
-  if (s < 1 || !Number.isInteger(s))
+  if (S.toNumber() < 1 || !Number.isInteger(S.toNumber()))
     throw new Error(
       'O número de servidores (s) deve ser inteiro e maior ou igual a 1.',
     )
